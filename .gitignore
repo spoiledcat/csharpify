@@ -511,3 +511,13 @@ $RECYCLE.BIN/
 
 ## Dear ImGui artifacts
 imgui.ini
+
+Makefile.in
+aclocal.m4
+autom4te.cache/
+config.guess
+config.sub
+configure
+install-sh
+missing
+src/Makefile.in
