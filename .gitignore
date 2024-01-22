@@ -521,3 +521,5 @@ configure
 install-sh
 missing
 src/Makefile.in
+compile
+depcomp
