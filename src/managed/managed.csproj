@@ -1,0 +1,63 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Version>0.0.0.0</Version>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DNNE" Version="2.*" GeneratePathProperty="true" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <DnneGenerateExports>true</DnneGenerateExports>
+    <DnneBuildExports>false</DnneBuildExports>
+  </PropertyGroup>
+
+  <Target
+    Name="GenerateExports"
+    Inputs="@(IntermediateAssembly)"
+    Outputs="@(DnneGeneratedSourceFile)"
+    AfterTargets="Compile">
+
+    <PropertyGroup>
+      <DocFlag Condition="Exists($(DocumentationFile))">-d &quot;$(DocumentationFile)&quot;</DocFlag>
+      <DnneExe>dotnet $([System.IO.Path]::GetFullPath('$(PkgDNNE)\tools\dnne-gen.dll'))</DnneExe>
+    </PropertyGroup>
+
+    <Exec Command="$(DnneExe) @(IntermediateAssembly) $(DocFlag) -o @(DnneGeneratedSourceFile)" />
+
+    <ItemGroup>
+      <Filtered Include="@(DnneNativeExportsInput)" Condition="'%(Extension)' == '.h'" />
+    </ItemGroup>
+
+    <Copy
+        SourceFiles="@(Filtered)"
+        DestinationFiles="@(Filtered->'$(DnneNativeExportsBinaryPath)%(OutputFileName)')" />
+
+
+    <Copy
+        SourceFiles="@(DnneGeneratedSourceFile)"
+        DestinationFiles="@(DnneGeneratedSourceFile->'$(DnneNativeExportsBinaryPath)$(TargetName).h')" />
+
+  </Target>
+
+  <Target
+    Name="PostGenerateExports"
+    Inputs="@(DnneNativeExportsInput)"
+    Outputs="@(DnneNativeExportsInput->'$(DnneNativeExportsBinaryPath)%(OutputFileName)')"
+    AfterTargets="GenerateExports"
+    DependsOnTargets="ResolvePackageAssets;ResolveFrameworkReferences"
+    >
+
+    <!-- <Message Text="files @(DnneNativeExportsInput)" Importance="high" /> -->
+<!--       <Copy
+        SourceFiles="@(DnneNativeExportsInput)"
+        DestinationFiles="@(DnneNativeExportsInput->'$(DnneNativeExportsBinaryPath)%(OutputFileName)')" />
+ -->
+</Target>
+
+</Project>

@@ -523,3 +523,10 @@ missing
 src/Makefile.in
 compile
 depcomp
+stamp-h
+config.status
+.deps
+Makefile
+.stamp*
+src/net8.0
+.dirstamp

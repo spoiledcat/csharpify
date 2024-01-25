@@ -1,11 +1,18 @@
 AC_INIT([csharpify], [1.0])
 AC_CONFIG_SRCDIR([README.md])
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_MAINTAINER_MODE
-AC_PROG_INSTALL
+
+AC_CONFIG_MACRO_DIRS([m4])
+
+AC_PROG_CXX([clang++ g++ c++])
+FILTER_VALUES(CXX, $CXX, -std=c++11 -std=gnu++11)
+
+AX_CXX_COMPILE_STDCXX(17, , mandatory)
 AC_PROG_CC
-AC_PROG_CXX
+
+AC_PROG_INSTALL
 AC_PROG_SED
 
 AC_PATH_PROG(SDL2CONFIG, sdl2-config, no)
@@ -28,6 +35,25 @@ fi
 
 AC_SUBST([EXTRA2_LDFLAGS],[])
 
+AC_PATH_PROG(DOTNET, dotnet, no)
+if test "x$DOTNET" = "xno" ; then
+	AC_MSG_ERROR([dotnet not found. Install dotnet.])
+fi
+AX_PROG_DOTNET([AC_MSG_CHECKING([success])],[AC_MSG_ERROR([dotnet not found. Install dotnet.])])
+
+AC_SUBST([RM], ["rm -f"])
+AC_SUBST([RM_R], ["rm -rf"])
+AC_SUBST([CP], [cp])
+
+
+AC_SUBST([INCLUDE_MAC], [1])
+#AC_SUBST([INCLUDE_WIN], [1])
+#AC_SUBST([INCLUDE_LINUX], [1])
+#AC_SUBST([INCLUDE_ANDROID], [1])
+
+AM_CONDITIONAL([CORECLR_RUNTIME], [true])
+
+
 case "$target" in
 	*-*-darwin* )
 		target_darwin=yes
@@ -38,7 +64,9 @@ esac
 
 AC_CONFIG_FILES([
 	Makefile
+	package-download/Makefile
 	src/Makefile
+	src/managed/Makefile
 ])
 AC_CONFIG_COMMANDS([default],[[ echo timestamp > stamp-h ]],[[]])
 AC_OUTPUT
