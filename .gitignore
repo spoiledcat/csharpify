@@ -530,3 +530,5 @@ Makefile
 .stamp*
 src/net8.0
 .dirstamp
+.packages
+generated/

@@ -1,9 +1,10 @@
+#include "main.h"
 #include "imgui.h"
 
 #include "coreclr/bridge.h"
 
 #undef DNNE_COMPILE_AS_SOURCE
-#include "managed.h"
+#include "exports.h"
 
 #ifdef DNNE_WINDOWS
     #ifdef _WCHAR_T_DEFINED
@@ -166,6 +167,7 @@ int main(int argc, char** argv)
 	}
 
 	CallMe();
+	CallMe2();
 
 	return imgui_main(argc, argv);
 }

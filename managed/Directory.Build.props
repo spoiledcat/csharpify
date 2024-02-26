@@ -1,0 +1,6 @@
+<Project>
+
+  <ItemGroup>
+    <PackageReference Include="DNNE" Version="2.*" GeneratePathProperty="true" />
+  </ItemGroup>
+</Project>

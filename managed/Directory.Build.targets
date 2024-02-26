@@ -1,0 +1,47 @@
+<Project>
+
+  <PropertyGroup>
+    <DnneGenerateExports>true</DnneGenerateExports>
+    <DnneBuildExports>false</DnneBuildExports>
+    <CSharpify_GeneratedPath>$(MSBuildProjectDirectory)\generated\</CSharpify_GeneratedPath>
+    <CSharpify_GeneratedHeader>exports.h</CSharpify_GeneratedHeader>
+    <CSharpify_GeneratedSource>exports.g.c</CSharpify_GeneratedSource>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <CSharpify_Generated Include="$(DnneGeneratedSourceFileName)" >
+      <OutputFileName>$(CSharpify_GeneratedHeader)</OutputFileName>
+    </CSharpify_Generated>
+    <CSharpify_Generated Include="$(DnneGeneratedSourceFileName)" >
+      <OutputFileName>$(CSharpify_GeneratedSource)</OutputFileName>
+    </CSharpify_Generated>
+    <CSharpify_Generated Include="$(DnnePlatformSourcePath)/dnne.h" >
+      <OutputFileName>dnne.h</OutputFileName>
+    </CSharpify_Generated>
+    <Clean Include="@(CSharpify_Generated->'$(CSharpify_GeneratedPath)%(OutputFileName)')" />
+  </ItemGroup>
+
+  <Target
+    Name="GenerateExports"
+    Inputs="@(IntermediateAssembly)"
+    Outputs="$(CSharpify_GeneratedPath)$(CSharpify_GeneratedHeader)"
+    AfterTargets="Compile">
+
+    <PropertyGroup>
+      <DocFlag Condition="Exists($(DocumentationFile))">-d &quot;$(DocumentationFile)&quot;</DocFlag>
+      
+      <!-- Not used right now, but here for reference if we need it -->
+      <DnneExe>dotnet $([System.IO.Path]::GetFullPath('$(PkgDNNE)\tools\dnne-gen.dll'))</DnneExe>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(DnneGeneratedOutputPath)" />
+    <Exec Command="$(DnneGenExe) @(IntermediateAssembly) $(DocFlag) -o @(DnneGeneratedSourceFile)" />
+
+    <MakeDir Directories="$(CSharpify_GeneratedPath)" />
+
+    <Copy
+        SourceFiles="@(CSharpify_Generated)"
+        DestinationFiles="@(CSharpify_Generated->'$(CSharpify_GeneratedPath)%(OutputFileName)')" />
+
+  </Target>
+</Project>

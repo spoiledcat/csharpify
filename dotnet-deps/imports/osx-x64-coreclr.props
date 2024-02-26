@@ -1,0 +1,23 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  
+  <PropertyGroup>
+    <CSharpify_Prop_ThisPlat>$(MSBuildThisFileName.Split('-')[0])</CSharpify_Prop_ThisPlat>
+    <CSharpify_Prop_ThisPlat>$(CSharpify_Prop_ThisPlat.Replace('_','-'))</CSharpify_Prop_ThisPlat>
+    <CSharpify_Prop_ThisShortPlat>$(CSharpify_Prop_ThisPlat.Split('-')[0])</CSharpify_Prop_ThisShortPlat>
+    <CSharpify_Prop_ThisArch>$(MSBuildThisFileName.Split('-')[1])</CSharpify_Prop_ThisArch>
+    <CSharpify_Prop_ThisRuntime>$(MSBuildThisFileName.Split('-')[2])</CSharpify_Prop_ThisRuntime>
+
+    <CSharpify_Prop_Platforms>$(CSharpify_Prop_Platforms);$(CSharpify_Prop_ThisPlat)</CSharpify_Prop_Platforms>
+
+    <CSharpify_Prop_Platforms_x64 Condition="'$(CSharpify_Prop_ThisArch)' == 'x64'">$(CSharpify_Prop_Platforms_x64);$(CSharpify_Prop_ThisPlat)</CSharpify_Prop_Platforms_x64>
+    <CSharpify_Prop_Platforms_arm64 Condition="'$(CSharpify_Prop_ThisArch)' == 'arm64'">$(CSharpify_Prop_Platforms_arm64);$(CSharpify_Prop_ThisPlat)</CSharpify_Prop_Platforms_arm64>
+    <CSharpify_Prop_Platforms_x86 Condition="'$(CSharpify_Prop_ThisArch)' == 'x86'">$(CSharpify_Prop_Platforms_x86);$(CSharpify_Prop_ThisPlat)</CSharpify_Prop_Platforms_x86>
+    <CSharpify_Prop_Platforms_arm Condition="'$(CSharpify_Prop_ThisArch)' == 'arm'">$(CSharpify_Prop_Platforms_arm);$(CSharpify_Prop_ThisPlat)</CSharpify_Prop_Platforms_arm>
+
+    <CSharpify_Prop_Platforms_mono Condition="'$(CSharpify_Prop_ThisRuntime)' == 'mono'">$(CSharpify_Prop_Platforms_mono);$(CSharpify_Prop_ThisPlat)-$(CSharpify_Prop_ThisArch)</CSharpify_Prop_Platforms_mono>
+    <CSharpify_Prop_Platforms_coreclr Condition="'$(CSharpify_Prop_ThisRuntime)' == 'coreclr'">$(CSharpify_Prop_Platforms_coreclr);$(CSharpify_Prop_ThisPlat)-$(CSharpify_Prop_ThisArch)</CSharpify_Prop_Platforms_coreclr>
+    <CSharpify_Prop_Platforms_nativeaot Condition="'$(CSharpify_Prop_ThisRuntime)' == 'nativeaot'">$(CSharpify_Prop_Platforms_nativeaot);$(CSharpify_Prop_ThisPlat)-$(CSharpify_Prop_ThisArch)</CSharpify_Prop_Platforms_nativeaot>
+
+  </PropertyGroup>
+
+</Project>

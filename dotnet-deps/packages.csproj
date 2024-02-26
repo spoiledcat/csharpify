@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net$(BundledNETCoreAppTargetFrameworkVersion)</TargetFramework>
+    <ActualPackageVersion Condition="'$(CustomDotNetVersion)' != ''">$(CustomDotNetVersion)</ActualPackageVersion>
+    <ActualPackageVersion Condition="'$(ActualPackageVersion)' == ''">$(BundledNETCoreAppPackageVersion)</ActualPackageVersion>
+    <NoWarn>$(NoWarn);NU1505</NoWarn> <!--  warning NU1505: Duplicate 'PackageDownload' items found. Remove the duplicate items or use the Update functionality to ensure a consistent restore behavior. -->
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <arm64>arm64</arm64>
+    <arm>arm</arm>
+    <x64>x64</x64>
+    <x86>x86</x86>
+  </PropertyGroup>
+
+  <Import Project="imports\*.props" />
+
+  <ItemGroup>
+    <CSharpify_Platforms Include="$(CSharpify_Prop_Platforms)" KeepDuplicates="False" />
+
+    <CSharpify_Platforms_x64 Include="$(CSharpify_Prop_Platforms_x64)" />
+    <CSharpify_Platforms_arm64 Include="$(CSharpify_Prop_Platforms_arm64)" />
+    <CSharpify_Platforms_x86 Include="$(CSharpify_Prop_Platforms_x86)" />
+    <CSharpify_Platforms_arm Include="$(CSharpify_Prop_Platforms_arm)" />
+
+    <CSharpify_Platforms_mono Include="$(CSharpify_Prop_Platforms_mono)" />
+    <CSharpify_Platforms_coreclr Include="$(CSharpify_Prop_Platforms_coreclr)" />
+    <CSharpify_Platforms_nativeaot Include="$(CSharpify_Prop_Platforms_nativeaot)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- download the runtime packs -->
+    <PackageDownload Include="@(CSharpify_Platforms_mono -> 'Microsoft.NETCore.App.Runtime.Mono.%(Identity)')" Version="[$(ActualPackageVersion)]" />
+    <PackageDownload Include="@(CSharpify_Platforms_coreclr -> 'Microsoft.NETCore.App.Runtime.%(Identity)')" Version="[$(ActualPackageVersion)]" />
+    <PackageDownload Include="@(CSharpify_Platforms_nativeaot -> 'Microsoft.NETCore.App.Runtime.NativeAOT.%(Identity)')" Version="[$(ActualPackageVersion)]" />
+
+    <!-- download the reference assemblies -->
+    <PackageDownload Include="microsoft.netcore.app.ref" Version="[$(ActualPackageVersion)]" />
+  </ItemGroup>
+
+  <Import Project="other-imports.props" />
+
+</Project>

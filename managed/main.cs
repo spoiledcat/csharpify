@@ -9,6 +9,10 @@ public unsafe class Program {
 		Console.WriteLine("hello");
 	}
 
+	[UnmanagedCallersOnly ()]
+	public static void CallMe2() {
+		Console.WriteLine("hello");
+	}
 
 
 	// [UnmanagedCallersOnly(EntryPoint = "reverse_inplace_ref_ushort")]
