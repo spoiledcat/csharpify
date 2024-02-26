@@ -1,21 +1,10 @@
+#include "config.h"
 #include "main.h"
+#include "managed_exports.h"
+
 #include "imgui.h"
 
 #include "coreclr/bridge.h"
-
-#undef DNNE_COMPILE_AS_SOURCE
-#include "exports.h"
-
-#ifdef DNNE_WINDOWS
-    #ifdef _WCHAR_T_DEFINED
-        typedef wchar_t char_t;
-    #else
-        typedef unsigned short char_t;
-    #endif
-#else
-    typedef char char_t;
-#endif
-
 
 #include <filesystem>
 
@@ -28,7 +17,6 @@ static MonoCoreRuntimeProperties monovm_core_properties = {
 	.pinvoke_override = nullptr
 };
 
-static constexpr char runtime_identifier[] = "osx-arm64";
 constexpr static char RUNTIME_IDENTIFIER_KEY[] = "RUNTIME_IDENTIFIER";
 constexpr static size_t RUNTIME_IDENTIFIER_INDEX = 0;
 
@@ -54,15 +42,8 @@ static property_array _property_keys2 {
 static property_array _property_values2 {
 };
 
-typedef void (*program_callme)();
-
-int imgui_main(int, char**);
-
-
 void *coreclr_handle = NULL;
 unsigned int coreclr_domainId = 0;
-
-#define ASSEMBLYNAME "managed"
 
 #ifdef __cplusplus
 extern "C" {
@@ -86,10 +67,6 @@ void* get_fast_callable_managed_function(
 }
 #endif
 
-std::string normalizePath(const std::string& messyPath) {
-    std::filesystem::path canonicalPath = std::filesystem::absolute(std::filesystem::weakly_canonical(std::filesystem::path(messyPath)));
-    return canonicalPath.make_preferred().string();
-}
 
 void MainLoop()
 {
@@ -98,13 +75,12 @@ void MainLoop()
 int main(int argc, char** argv)
 {
 	fs::path assemblyPath = ".";
-	auto assemblyName = "managed.dll";
+	auto assemblyName = ASSEMBLYNAME ".dll";
 	fs::path startAssembly = assemblyPath / assemblyName;
 
 	auto basePath = normalizePath(".");
-	auto runtimePath = fs::path{normalizePath("net8.0")};
+	auto runtimePath = fs::path{normalizePath("sdk")};
 	
-
 	// _property_values[APP_CONTEXT_BASE_DIRECTORY_INDEX] = runtimePath.c_str();
 
 	std::string paths;
@@ -114,6 +90,9 @@ int main(int argc, char** argv)
 			continue;
 
 		if (dir_entry.path().extension() != ".dll")
+			continue;
+
+		if (dir_entry.path().stem() == ASSEMBLYNAME)
 			continue;
 
 		if (paths.empty())
@@ -146,18 +125,17 @@ int main(int argc, char** argv)
 	// 	const_cast<const char**>(_property_values)
 	// );
 
-	std::string friendlyName = "managed";
-
 
 	int rv = coreclr_initialize (
 		runtimePath.c_str(),
-		friendlyName.c_str(),
+		ASSEMBLYNAME,
 		4,
 		propertyKeys,
 		propertyValues,
 		&coreclr_handle,
 		&coreclr_domainId
 	);
+
 	printf("%p\n", rv);
 	printf("%p\n", coreclr_handle);
 	printf("%d\n", coreclr_domainId);

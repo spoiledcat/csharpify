@@ -6,6 +6,8 @@ cmake_path(APPEND PROJECT_SOURCE_DIR "generated" OUTPUT_VARIABLE generated_INCLU
 cmake_path(ABSOLUTE_PATH generated_INCLUDE_DIR BASE_DIRECTORY "${CMAKE_SOURCE_DIR}" NORMALIZE OUTPUT_VARIABLE generated_INCLUDE_DIR)
 set(generated_INCLUDE_DIR "${generated_INCLUDE_DIR}" PARENT_SCOPE)
 set(csharpify_managed_PUBLISH_DIR "${csharpify_managed_PUBLISH_DIR}" PARENT_SCOPE)
+cmake_path(GET CSPROJ STEM ASSEMBLYNAME)
+set(ASSEMBLYNAME "${ASSEMBLYNAME}" CACHE STRING "Assembly name")
 
 set(build_outputs
   managed.dll
@@ -33,7 +35,7 @@ add_custom_target(csharpify_managed
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 add_custom_target(copy_sdk
-  COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${csharpify_managed_PUBLISH_DIR}" "${CMAKE_BINARY_DIR}/bin/net${DOTNET_MAJOR}.${DOTNET_MINOR}"
+  COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${csharpify_managed_PUBLISH_DIR}" "${CMAKE_BINARY_DIR}/bin/sdk"
   DEPENDS publish/managed.dll
 )
 
