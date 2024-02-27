@@ -36,6 +36,7 @@
 
     <!-- download the reference assemblies -->
     <PackageDownload Include="microsoft.netcore.app.ref" Version="[$(ActualPackageVersion)]" />
+    <PackageDownload Include="microsoft.netcore.app.host.win-x64" Version="[$(ActualPackageVersion)]" />
   </ItemGroup>
 
   <Import Project="other-imports.props" />

@@ -1,5 +1,5 @@
-#ifndef __CSHARPIFY_CONFIG_H__
-#define __CSHARPIFY_CONFIG_H__
+#ifndef CSHARPIFY_CONFIG_H__
+#define CSHARPIFY_CONFIG_H__
 
 static constexpr char runtime_identifier[] = "@RID@";
 #define ASSEMBLYNAME "@ASSEMBLYNAME@"

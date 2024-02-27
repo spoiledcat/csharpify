@@ -17,6 +17,8 @@ else()
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
 
+add_subdirectory(dotnet-deps EXCLUDE_FROM_ALL)
+
 set(ORIGINAL_PATH $ENV{PATH})
 
 set(DOTNET_VERSION ${DOTNET_VERSION})
@@ -90,8 +92,15 @@ else()
     set(runtimesuffix "NativeAOT.")
 endif()
 
+cmake_path(APPEND CMAKE_SOURCE_DIR ".packages" OUTPUT_VARIABLE DOTNET_PACKAGES_PATH)
+
+set(DOTNET_APPHOST_PATH
+  "${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.host.win-x64/${DOTNET_SDK_VERSION}/runtimes/win-x64/native"
+  CACHE STRING ".NET App Host" FORCE
+)
+
 set(DOTNET_SDK_PATH_ROOT
-  "${CMAKE_SOURCE_DIR}/.packages/microsoft.netcore.app.runtime.${runtimesuffix}${RID}/${DOTNET_SDK_VERSION}/runtimes/${RID}"
+  "${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.runtime.${runtimesuffix}${RID}/${DOTNET_SDK_VERSION}/runtimes/${RID}"
   CACHE STRING ".NET SDK root" FORCE
 )
 
@@ -99,19 +108,41 @@ set(DOTNET_SDK_PATH "${DOTNET_SDK_PATH_ROOT}/lib/net${DOTNET_MAJOR}.${DOTNET_MIN
 set(DOTNET_LIBRARY_PATH "${DOTNET_SDK_PATH_ROOT}/native" CACHE STRING ".NET lib path for linking" FORCE)
 unset(CORECLR CACHE)
 
-if(DOTNET_RUNTIME STREQUAL "coreclr")
+if(DOTNET_RUNTIME STREQUAL "coreclr" AND (NOT DOTNET_PLATFORM STREQUAL "win"))
   find_library(CORECLR coreclr PATHS "${DOTNET_LIBRARY_PATH}")
   message(STATUS "${CORECLR} ${DOTNET_LIBRARY_PATH}")
+endif()
+
+if(DOTNET_PLATFORM STREQUAL "win")
+  include(FetchContent)
+  FetchContent_Declare(
+    sdl2
+    URL https://github.com/libsdl-org/SDL/releases/download/release-2.30.0/SDL2-devel-2.30.0-VC.zip
+    URL_HASH MD5=179d5f19c62c16343a3bd606ea5b121a
+  )
+  FetchContent_MakeAvailable(sdl2)
+
+  list(APPEND CMAKE_PREFIX_PATH "${sdl2_SOURCE_DIR}")
+
+  set(NETHOST "${DOTNET_APPHOST_PATH}/libnethost.lib")
 endif()
 
 find_package(SDL2 REQUIRED)
 message(STATUS "${SDL2_INCLUDE_DIRS} ${SDL2_LIBRARIES}")
 
-find_package(Vulkan REQUIRED COMPONENTS MoltenVK)
-message(STATUS "${Vulkan_MoltenVK_LIBRARY} ${Vulkan_LIBRARY} ${Vulkan_INCLUDE_DIR}")
+if(DOTNET_PLATFORM STREQUAL "osx" OR DOTNET_PLATFORM STREQUAL "ios")
+  set(USE_MOLTENVK 1)
+endif()
 
+if(USE_MOLTENVK)
+  find_package(Vulkan REQUIRED COMPONENTS MoltenVK)
+  message(STATUS "${Vulkan_MoltenVK_LIBRARY} ${Vulkan_LIBRARY} ${Vulkan_INCLUDE_DIR}")
+else()
+  find_package(Vulkan REQUIRED)
+  message(STATUS "${Vulkan_LIBRARY} ${Vulkan_INCLUDE_DIR}")
+  set(Vulkan_MoltenVK_LIBRARY "")
+endif()
 
-add_subdirectory(dotnet-deps EXCLUDE_FROM_ALL)
 add_subdirectory(managed)
 add_subdirectory(native)
 

@@ -1,7 +1,7 @@
 #if defined (CORECLR_RUNTIME)
 
-#ifndef __CORECLR_BRIDGE__
-#define __CORECLR_BRIDGE__
+#ifndef CSHARPIFY_CORECLR_BRIDGE_H_
+#define CSHARPIFY_CORECLR_BRIDGE_H_
 
 #include "runtime.h"
 #include "coreclrhost.h"
@@ -21,7 +21,7 @@ extern "C" {
 //
 // This struct must be kept in sync with the MonoObject struct in Runtime.CoreCLR.cs
 struct _MonoObject {
-	int _Atomic reference_count;
+	uint32_t reference_count;
 	GCHandle gchandle;
 	// We write the value of the struct here every time we create a MonoObject instance.
 	// We can also fetch this value when it's needed (as opposed to creating it every time),
@@ -45,5 +45,5 @@ struct _MonoMethodSignature {
 }
 #endif
 
-#endif // __CORECLR_BRIDGE__
+#endif // CSHARPIFY_CORECLR_BRIDGE_H_
 #endif // CORECLR_RUNTIME

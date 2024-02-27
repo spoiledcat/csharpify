@@ -1,5 +1,11 @@
-#ifndef __RUNTIME_H__
-#define __RUNTIME_H__
+#ifndef CSHARPIFY_CORECLR_RUNTIME_H_
+#define CSHARPIFY_CORECLR_RUNTIME_H_
+
+#ifdef _WIN32
+#define ssize_t long long
+#include <cstdint>
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -358,4 +364,4 @@ MONO_API_FUNCTION(int, monovm_initialize_preparsed, (MonoCoreRuntimeProperties *
 }
 #endif
 
-#endif // __RUNTIME_H__
+#endif // CSHARPIFY_CORECLR_RUNTIME_H_

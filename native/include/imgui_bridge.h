@@ -1,0 +1,6 @@
+#ifndef CSHARPIFY_IMGUI_BRIDGE_H_
+#define CSHARPIFY_IMGUI_BRIDGE_H_
+
+void MainLoop();
+
+#endif // CSHARPIFY_IMGUI_BRIDGE_H_
