@@ -39,7 +39,7 @@
     <PackageDownload Include="microsoft.netcore.app.host.win-x64" Version="[$(ActualPackageVersion)]" />
 
     <!-- grab dnne so we can compile against it on Windows -->
-    <PackageDownload Include="DNNE" Version="2.0.6" />
+    <PackageDownload Include="DNNE" Version="[2.0.6]" />
   </ItemGroup>
 
   <Import Project="other-imports.props" />

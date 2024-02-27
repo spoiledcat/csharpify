@@ -94,6 +94,7 @@ endif()
 
 cmake_path(APPEND CMAKE_SOURCE_DIR ".packages" OUTPUT_VARIABLE DOTNET_PACKAGES_PATH)
 
+# this is useful on all platforms for the coreclr definitions
 set(DOTNET_APPHOST_PATH
   "${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.host.win-x64/${DOTNET_SDK_VERSION}/runtimes/win-x64/native"
   CACHE STRING ".NET App Host" FORCE
@@ -124,6 +125,7 @@ if(DOTNET_PLATFORM STREQUAL "win")
 
   list(APPEND CMAKE_PREFIX_PATH "${sdl2_SOURCE_DIR}")
 
+  # there are two libs, nethost.lib (dynamic) and libnethost.lib (static), and we want the static one
   set(NETHOST "${DOTNET_APPHOST_PATH}/libnethost.lib")
 endif()
 

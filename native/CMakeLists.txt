@@ -116,11 +116,31 @@ add_compile_definitions(csharpify DNNE_COMPILE_AS_SOURCE CORECLR_RUNTIME)
 link_directories(csharpify ${DOTNET_LIBRARY_PATH})
 
 add_dependencies(csharpify csharpify_managed)
+set(CSHARPIFY_FILE "${CMAKE_EXECUTABLE_PREFIX}csharpify${CMAKE_EXECUTABLE_SUFFIX}")
+get_target_property(SDL2_DLL SDL2::SDL2 "IMPORTED_LOCATION")
+
+list(APPEND build_outputs
+	"${SDL2_DLL}"
+)
 
 # Bundle everything into a runnable directory
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-add_custom_target(csharpify_native_bundled
-  COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:csharpify>" "${CMAKE_BINARY_DIR}/bin/"
-  DEPENDS csharpify
+foreach(thing ${build_outputs})
+	cmake_path(GET thing FILENAME filename)
+	list(APPEND bundle_outputs "${CMAKE_BINARY_DIR}/bin/${filename}")
+endforeach()
+
+list(APPEND bundle_outputs "${CMAKE_BINARY_DIR}/bin/${CSHARPIFY_FILE}")
+add_custom_command(
+  OUTPUT  ${bundle_outputs}
+	COMMAND ${CMAKE_COMMAND} -E copy -t "${CMAKE_BINARY_DIR}/bin/" "$<TARGET_FILE:csharpify>" ${build_outputs}
+  DEPENDS ${build_outputs}
+)
+
+add_custom_target(csharpify_native_bundled DEPENDS "${bundle_outputs}")
+
+add_custom_target(run
+	COMMAND "${CMAKE_BINARY_DIR}/bin/${CSHARPIFY_FILE}"
+	DEPENDS "${CMAKE_BINARY_DIR}/bin/${CSHARPIFY_FILE}"
 )

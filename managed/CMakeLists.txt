@@ -9,10 +9,14 @@ set(csharpify_managed_PUBLISH_DIR "${csharpify_managed_PUBLISH_DIR}" PARENT_SCOP
 cmake_path(GET CSPROJ STEM ASSEMBLYNAME)
 set(ASSEMBLYNAME "${ASSEMBLYNAME}" CACHE STRING "Assembly name")
 
-set(build_outputs
+list(APPEND build_outputs
   managed.dll
   managed.pdb
 )
+
+if(DOTNET_PLATFORM STREQUAL "win" AND DOTNET_RUNTIME STREQUAL "coreclr")
+  list(APPEND build_outputs managed.runtimeconfig.json)
+endif()
 
 add_custom_command(
   OUTPUT ${build_outputs}
@@ -25,11 +29,6 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} publish \"${CSPROJ}\" --sc -r ${RID} --nologo -c $<CONFIG> -o \"${csharpify_managed_PUBLISH_DIR}\"
   DEPENDS managed.dll
 )
-
-add_custom_target(csharpify_managed
-  DEPENDS publish/managed.dll
-)
-
 
 # Bundle everything into a runnable directory
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -49,4 +48,11 @@ add_custom_command(
   DEPENDS managed.dll
 )
 
-add_custom_target(csharpify_managed_bundled DEPENDS copy_sdk ${bundle_outputs})
+list(APPEND sdk ${bundle_outputs})
+
+if(NOT(DOTNET_PLATFORM STREQUAL "win" AND DOTNET_RUNTIME STREQUAL "coreclr"))
+  list(APPEND sdk copy_sdk)
+endif()
+
+add_custom_target(csharpify_managed DEPENDS ${build_outputs})
+add_custom_target(csharpify_managed_bundled DEPENDS ${sdk})
