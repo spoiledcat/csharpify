@@ -60,6 +60,12 @@ target_sources(csharpify
 	${PROJECT_BINARY_DIR}/include/config.h
 )
 
+target_sources(csharpify
+	PRIVATE FILE_SET HEADERS
+	BASE_DIRS "${DOTNET_APPHOST_PATH}"
+	FILES
+	"${DOTNET_APPHOST_PATH}/coreclr_delegates.h"
+)
 
 if(DOTNET_RUNTIME STREQUAL "coreclr")
 	target_sources(csharpify
@@ -91,10 +97,7 @@ if(DOTNET_PLATFORM STREQUAL "win")
 	set_property(TARGET csharpify PROPERTY
              MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-	include_directories(csharpify 
-		${DOTNET_APPHOST_PATH}
-	)
-	target_link_libraries(csharpify 
+	target_link_libraries(csharpify
 		${NETHOST}
 	)
 endif()

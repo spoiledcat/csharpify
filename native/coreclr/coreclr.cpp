@@ -2,6 +2,7 @@
 #include "bridge.h"
 #include "utils.h"
 
+#include "coreclr_delegates.h"
 #include <filesystem>
 #include <iostream>
 
@@ -124,6 +125,9 @@ int CORECLR_CALLING_CONVENTION coreclr_create_delegate(
 
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef _WIN32
 //void* get_fast_callable_managed_function(
@@ -140,21 +144,24 @@ int CORECLR_CALLING_CONVENTION coreclr_create_delegate(
 //	return del;
 //}
 #else
-void* get_fast_callable_managed_function(
-    const char_t* dotnet_type,
-    const char_t* dotnet_type_method)
-{
-	std::string typeAndAssembly{dotnet_type};
-	auto pos = typeAndAssembly.find(", ");
-	std::string type = typeAndAssembly.substr(0, pos);
-	std::string assembly = typeAndAssembly.substr(pos + 2);
+void *get_fast_callable_managed_function(
+        const char_t *dotnet_type,
+        const char_t *dotnet_type_method) {
+    std::string typeAndAssembly{dotnet_type};
+    auto pos = typeAndAssembly.find(", ");
+    std::string type = typeAndAssembly.substr(0, pos);
+    std::string assembly = typeAndAssembly.substr(pos + 2);
 
-	void *del = NULL;
-	int rv = coreclr_create_delegate (coreclr_handle, coreclr_domainId, assembly.c_str(), type.c_str(), dotnet_type_method, &del);
-	return del;
+    void *del = NULL;
+    int rv = coreclr_create_delegate(coreclr_handle, coreclr_domainId, assembly.c_str(), type.c_str(),
+                                     dotnet_type_method, &del);
+    return del;
 }
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 
 #ifdef _WIN32
 
@@ -213,7 +220,7 @@ int load_managed_runtime()
 	};
 
 
-		int rv = coreclr_initialize (
+    int rv = coreclr_initialize (
 		runtimePath.string().c_str(),
 		ASSEMBLYNAME,
 		4,
@@ -223,5 +230,6 @@ int load_managed_runtime()
 		&coreclr_domainId
 	);
 
+    return rv;
 }
 #endif

@@ -3,9 +3,11 @@
 
 #ifdef _WIN32
 #define ssize_t long long
-#include <cstdint>
 #endif
 
+#include <cstddef>
+#include <cstdint>
+#include <string>
 
 #ifdef __cplusplus
 extern "C" {
