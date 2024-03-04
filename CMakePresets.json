@@ -1,0 +1,46 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 26,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "coreclr",
+      "displayName": "CoreCLR",
+      "description": "Build with CoreCLR",
+      "binaryDir": "${sourceDir}/build/coreclr",
+      "cacheVariables": {
+        "DOTNET_RUNTIME": {
+          "type": "STRING",
+          "value": "coreclr"
+        }
+      }
+	 },
+    {
+      "name": "mono",
+      "displayName": "Mono",
+      "description": "Build with Mono",
+      "binaryDir": "${sourceDir}/build/mono",
+      "cacheVariables": {
+        "DOTNET_RUNTIME": {
+          "type": "STRING",
+          "value": "mono"
+        }
+      }
+	 },
+    {
+      "name": "nativeaot",
+      "displayName": "NativeAOT",
+      "description": "Build with NativeAOT",
+      "binaryDir": "${sourceDir}/build/nativeaot",
+      "cacheVariables": {
+        "DOTNET_RUNTIME": {
+          "type": "STRING",
+          "value": "nativeaot"
+        }
+      }
+	 }
+	]
+}

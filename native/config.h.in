@@ -4,4 +4,8 @@
 static constexpr char runtime_identifier[] = "@RID@";
 #define ASSEMBLYNAME "@ASSEMBLYNAME@"
 
+#define RUNTIME_CORECLR @RUNTIME_CORECLR@
+#define RUNTIME_MONO @RUNTIME_MONO@
+#define RUNTIME_NATIVEAOT @RUNTIME_NATIVEAOT@
+
 #endif

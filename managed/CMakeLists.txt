@@ -19,14 +19,17 @@ if(DOTNET_PLATFORM STREQUAL "win" AND DOTNET_RUNTIME STREQUAL "coreclr")
 endif()
 
 add_custom_command(
-  OUTPUT ${build_outputs}
-  COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} build \"${CSPROJ}\" --nologo -c $<CONFIG> -o \"${PROJECT_BINARY_DIR}\"
-  BYPRODUCTS "${generated_INCLUDE_DIR}/dnne.h" "${generated_INCLUDE_DIR}/exports.h" "${generated_INCLUDE_DIR}/exports.g.c"
+  OUTPUT ${build_outputs} "${generated_INCLUDE_DIR}/exports.g.c"
+  COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} build \"${CSPROJ}\" --nologo -c $<CONFIG> -o \"${PROJECT_BINARY_DIR}\" /p:UseMonoRuntime=$<IF:$<BOOL:${RUNTIME_MONO}>,true,false>
+  BYPRODUCTS "${generated_INCLUDE_DIR}/dnne.h" "${generated_INCLUDE_DIR}/exports.h"
+  DEPENDS "Directory.Build.props" "Directory.Build.targets" "main.cs" "managed.csproj"
 )
+
+add_custom_target(build DEPENDS ${build_outputs} "${generated_INCLUDE_DIR}/exports.g.c")
 
 add_custom_command(
   OUTPUT publish/managed.dll
-  COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} publish \"${CSPROJ}\" --sc -r ${RID} --nologo -c $<CONFIG> -o \"${csharpify_managed_PUBLISH_DIR}\"
+  COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} publish \"${CSPROJ}\" --sc -r ${RID} --nologo -c $<CONFIG> -o \"${csharpify_managed_PUBLISH_DIR}\"  /p:UseMonoRuntime=$<IF:$<BOOL:${RUNTIME_MONO}>,true,false>
   DEPENDS managed.dll
 )
 

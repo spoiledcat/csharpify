@@ -11,6 +11,34 @@ std::string normalizePath(const std::string& messyPath) {
 }
 
 
+int parseManagedSignature(const std::string& full_type, std::string& assembly, std::string& typeAndNamespace,
+                          std::string& nmspace, std::string& type) {
+    size_t pos = full_type.find(", ");
+    typeAndNamespace = full_type.substr(0, pos);
+    assembly = full_type.substr(pos + 2);
+    nmspace = {};
+
+    pos = typeAndNamespace.find('+');
+
+    if (pos != std::string::npos) {
+        nmspace = typeAndNamespace.substr(0, pos);
+    }
+
+    if (!nmspace.empty()) {
+        const std::filesystem::path typeAsPath(nmspace);
+        if (typeAsPath.has_extension()) {
+            auto str = typeAsPath.string();
+            auto ext = typeAsPath.extension().string();
+            nmspace = str.substr(0, str.length() - ext.length());
+            type = ext.substr(1);
+            type += "/";
+        }
+    }
+    type += typeAndNamespace.substr(pos + 1);
+
+    return 0;
+}
+
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX

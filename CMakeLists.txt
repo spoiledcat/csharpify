@@ -84,12 +84,19 @@ set(RID "${DOTNET_PLATFORM}-${DOTNET_ARCH}" CACHE STRING ".NET Runtime Identifie
 message(STATUS ".NET RID: ${RID}")
 message(STATUS ".NET Runtime: ${DOTNET_RUNTIME}")
 
+set(RUNTIME_CORECLR 0)
+set(RUNTIME_MONO 0)
+set(RUNTIME_NATIVEAOT 0)
+
 if (DOTNET_RUNTIME STREQUAL "coreclr")
+  set(RUNTIME_CORECLR 1)
   set(runtimesuffix "")
 elseif(DOTNET_RUNTIME STREQUAL "mono")
+  set(RUNTIME_MONO 1)
   set(runtimesuffix "Mono.")
 else()
-    set(runtimesuffix "NativeAOT.")
+  set(RUNTIME_NATIVEAOT 1)
+  set(runtimesuffix "NativeAOT.")
 endif()
 
 cmake_path(APPEND CMAKE_SOURCE_DIR ".packages" OUTPUT_VARIABLE DOTNET_PACKAGES_PATH)
@@ -107,9 +114,21 @@ set(DOTNET_SDK_PATH_ROOT
 
 set(DOTNET_SDK_PATH "${DOTNET_SDK_PATH_ROOT}/lib/net${DOTNET_MAJOR}.${DOTNET_MINOR}" CACHE STRING ".NET SDK path" FORCE)
 set(DOTNET_LIBRARY_PATH "${DOTNET_SDK_PATH_ROOT}/native" CACHE STRING ".NET lib path for linking" FORCE)
+
+if(NOT DOTNET_INCLUDE_DIRS)
+  set(DOTNET_INCLUDE_DIRS "")
+endif()
+
+if(RUNTIME_MONO)
+  list(APPEND DOTNET_INCLUDE_DIRS "${DOTNET_LIBRARY_PATH}/include/mono-2.0/")
+endif()
+
 unset(CORECLR CACHE)
 
-if(DOTNET_RUNTIME STREQUAL "coreclr" AND (NOT DOTNET_PLATFORM STREQUAL "win"))
+if(RUNTIME_CORECLR AND (NOT DOTNET_PLATFORM STREQUAL "win"))
+  find_library(CORECLR coreclr PATHS "${DOTNET_LIBRARY_PATH}")
+  message(STATUS "${CORECLR} ${DOTNET_LIBRARY_PATH}")
+elseif(RUNTIME_MONO)
   find_library(CORECLR coreclr PATHS "${DOTNET_LIBRARY_PATH}")
   message(STATUS "${CORECLR} ${DOTNET_LIBRARY_PATH}")
 endif()

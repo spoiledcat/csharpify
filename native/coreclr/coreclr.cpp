@@ -1,8 +1,11 @@
 #include "config.h"
+
+#if RUNTIME_CORECLR
+
+#include "managed_exports.h"
 #include "bridge.h"
 #include "utils.h"
 
-#include "coreclr_delegates.h"
 #include <filesystem>
 #include <iostream>
 
@@ -232,4 +235,10 @@ int load_managed_runtime()
 
     return rv;
 }
+
+int register_icall(const char* name, const void* fnptr)
+{
+}
+#endif
+
 #endif

@@ -35,6 +35,7 @@
     </PropertyGroup>
 
     <MakeDir Directories="$(DnneGeneratedOutputPath)" />
+    <Message Importance="High" Text="$(DnneGenExe) @(IntermediateAssembly) $(DocFlag) -o @(DnneGeneratedSourceFile)" />
     <Exec Command="$(DnneGenExe) @(IntermediateAssembly) $(DocFlag) -o @(DnneGeneratedSourceFile)" />
 
     <MakeDir Directories="$(CSharpify_GeneratedPath)" />

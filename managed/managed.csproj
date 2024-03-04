@@ -9,4 +9,8 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
   </PropertyGroup>
 
+  <ItemGroup>
+    <DirectPInvoke Include="__Internal" />
+    <DirectPInvoke Include="$(TargetName)" />
+  </ItemGroup>
 </Project>

@@ -37,24 +37,7 @@ typedef gboolean (*GEqualFunc)     (gconstpointer a, gconstpointer b);
 
 /* mini/mono-private-unstable.h */
 
-typedef struct {
-	uint32_t assembly_count;
-	char **basenames; /* Foo.dll */
-	uint32_t *basename_lens;
-	char **assembly_filepaths; /* /blah/blah/blah/Foo.dll */
-} MonoCoreTrustedPlatformAssemblies;
 
-typedef struct {
-	uint32_t dir_count;
-	char **dirs;
-} MonoCoreLookupPaths;
-
-typedef struct {
-	MonoCoreTrustedPlatformAssemblies *trusted_platform_assemblies;
-	MonoCoreLookupPaths *app_paths;
-	MonoCoreLookupPaths *native_dll_search_directories;
-	void* pinvoke_override;
-} MonoCoreRuntimeProperties;
 
 
 // static MonoCoreRuntimeProperties monovm_core_properties;
@@ -356,11 +339,6 @@ typedef void (*MonovmRuntimeConfigArgumentsCleanup)          (MonovmRuntimeConfi
 /* not in any header */
 
 void mono_gc_init_finalizer_thread ();
-
-#define MONO_API_FUNCTION(ret,name,args) MONO_API ret name args;
-MONO_API_FUNCTION(int, monovm_initialize_preparsed, (MonoCoreRuntimeProperties *parsed_properties, int propertyCount, const char **propertyKeys, const char **propertyValues))
-#undef MONO_API_FUNCTION
-
 
 #ifdef __cplusplus
 }

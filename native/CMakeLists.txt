@@ -23,7 +23,7 @@ if(DOTNET_RUNTIME STREQUAL "coreclr")
 	)
 endif()
 
-list(APPEND SOURCES
+list(APPEND SHARED_SOURCES
 	main.cpp
 	${generated_INCLUDE_DIR}/exports.g.c
 	${PROJECT_BINARY_DIR}/imgui.gen.cpp
@@ -36,17 +36,21 @@ list(APPEND SOURCES
 	${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
 )
 
+set(RUNTIME_SOURCES "")
 
-if(DOTNET_RUNTIME STREQUAL "coreclr")
+if(RUNTIME_CORECLR)
 	if(DOTNET_PLATFORM STREQUAL "win")
-		list(APPEND SOURCES ${CMAKE_SOURCE_DIR}/.packages/dnne/2.0.6/tools/platform/platform.c)
+		list(APPEND RUNTIME_SOURCES ${CMAKE_SOURCE_DIR}/.packages/dnne/2.0.6/tools/platform/platform.c)
 	endif()
-	list(APPEND SOURCES coreclr/coreclr.cpp)
+	list(APPEND RUNTIME_SOURCES coreclr/coreclr.cpp)
+elseif(RUNTIME_MONO)
+	list(APPEND RUNTIME_SOURCES mono/mono.cpp)
+else()
 endif()
 
 configure_file(config.h.in include/config.h)
 
-add_executable(csharpify ${SOURCES})
+add_executable(csharpify ${SHARED_SOURCES} ${RUNTIME_SOURCES})
 
 target_sources(csharpify
 	PRIVATE FILE_SET HEADERS
@@ -67,7 +71,7 @@ target_sources(csharpify
 	"${DOTNET_APPHOST_PATH}/coreclr_delegates.h"
 )
 
-if(DOTNET_RUNTIME STREQUAL "coreclr")
+if(RUNTIME_CORECLR)
 	target_sources(csharpify
 		PRIVATE FILE_SET HEADERS
 		BASE_DIRS coreclr
@@ -76,9 +80,24 @@ if(DOTNET_RUNTIME STREQUAL "coreclr")
 		coreclr/coreclrhost.h
 		coreclr/runtime.h
 	)
+else(RUNTIME_MONO)
+	target_sources(csharpify
+		PRIVATE FILE_SET HEADERS
+		BASE_DIRS mono
+		FILES
+		mono/bridge.h
+	)
 endif()
 
-include_directories(csharpify 
+message(STATUS "DOTNET_INCLUDE_DIRS: ${DOTNET_INCLUDE_DIRS}")
+message(STATUS "generated_INCLUDE_DIR: ${generated_INCLUDE_DIR} ")
+message(STATUS "SDL2_INCLUDE_DIRS: ${SDL2_INCLUDE_DIRS}")
+message(STATUS "Vulkan_INCLUDE_DIRS: ${Vulkan_INCLUDE_DIRS}")
+message(STATUS "IMGUI_DIR: ${IMGUI_DIR}")
+message(STATUS "IMGUI_DIR/backends: ${IMGUI_DIR}/backends")
+
+target_include_directories(csharpify PRIVATE
+	${DOTNET_INCLUDE_DIRS}
 	${generated_INCLUDE_DIR} 
 	${SDL2_INCLUDE_DIRS} 
 	${Vulkan_INCLUDE_DIRS} 
@@ -115,7 +134,8 @@ if(DOTNET_PLATFORM STREQUAL "osx")
 	)
 endif()
 
-add_compile_definitions(csharpify DNNE_COMPILE_AS_SOURCE CORECLR_RUNTIME)
+target_compile_definitions(csharpify PRIVATE DNNE_COMPILE_AS_SOURCE)
+
 link_directories(csharpify ${DOTNET_LIBRARY_PATH})
 
 add_dependencies(csharpify csharpify_managed)
