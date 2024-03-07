@@ -22,11 +22,15 @@
       "name": "mono",
       "displayName": "Mono",
       "description": "Build with Mono",
-      "binaryDir": "${sourceDir}/build/mono",
+      "binaryDir": "${sourceDir}/build/mono2",
       "cacheVariables": {
         "DOTNET_RUNTIME": {
           "type": "STRING",
           "value": "mono"
+        },
+        "IMGUI_STATIC": {
+          "type": "BOOL",
+          "value": "TRUE"
         }
       }
 	 },

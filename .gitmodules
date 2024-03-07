@@ -1,3 +1,6 @@
 [submodule "imgui"]
 	path = imgui
 	url = git@github.com:ocornut/imgui.git
+[submodule "cimgui"]
+	path = cimgui
+	url = https://github.com/cimgui/cimgui

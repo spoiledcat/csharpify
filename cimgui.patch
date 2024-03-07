@@ -1,0 +1,35 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 5012db3..7d3026c 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -4,7 +4,7 @@ project(cimgui)
+ 
+ set (CMAKE_CXX_STANDARD 11)
+ 
+-if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/imgui/imgui_tables.cpp)
++if (EXISTS ${CMAKE_SOURCE_DIR}/imgui/imgui_tables.cpp)
+ 	set(TABLES_SOURCE "imgui/imgui_tables.cpp")
+ else()
+ 	set(TABLES_SOURCE "")
+@@ -25,6 +25,10 @@ set(IMGUI_STATIC "no" CACHE STRING "Build as a static library")
+ set(IMGUI_FREETYPE "no" CACHE STRING "Build with freetype library")
+ set(IMGUI_LIBRARIES )
+ 
++if(CMAKE_HOST_APPLE)
++    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
++endif()
++
+ if(IMGUI_FREETYPE)
+ 	FIND_PACKAGE(freetype REQUIRED PATHS ${FREETYPE_PATH})
+ 	list(APPEND IMGUI_LIBRARIES freetype)
+@@ -47,8 +51,8 @@ else (WIN32)
+     target_compile_definitions(cimgui PUBLIC IMGUI_IMPL_API=extern\t\"C\"\t)
+ endif (WIN32)
+ 
+-target_include_directories(cimgui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+-target_include_directories(cimgui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
++target_include_directories(cimgui PUBLIC ${CMAKE_SOURCE_DIR})
++target_include_directories(cimgui PUBLIC ${CMAKE_SOURCE_DIR}/imgui)
+ set_target_properties(cimgui PROPERTIES PREFIX "")
+ target_link_libraries(cimgui ${IMGUI_LIBRARIES})
+ 

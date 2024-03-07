@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.26)
 project(csharpify)
 
+add_custom_target(program ALL)
+
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "")
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Debug")
@@ -39,6 +41,8 @@ set(DOTNET_PATCH "${CMAKE_MATCH_3}")
 message(STATUS ".NET SDK:${DOTNET_SDK_VERSION}")
 message(STATUS ".NET Version:${DOTNET_MAJOR}.${DOTNET_MINOR}.${DOTNET_PATCH}")
 
+message(STATUS "DOTNET_ARCH:${DOTNET_ARCH}")
+
 if(NOT DOTNET_ARCH)
   string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" DOTNET_ARCH)
   string(REPLACE "amd" "x" DOTNET_ARCH "${DOTNET_ARCH}")
@@ -76,6 +80,9 @@ if(DOTNET_PLATFORM STREQUAL "osx")
   find_library(COCOA Cocoa)
   find_library(COREVIDEO CoreVideo)
 elseif(DOTNET_PLATFORM STREQUAL "win")
+  set(BUILD_SDL2 1)
+  # there are two libs, nethost.lib (dynamic) and libnethost.lib (static), and we want the static one
+  set(NETHOST "${DOTNET_APPHOST_PATH}/libnethost.lib")
 elseif(DOTNET_PLATFORM STREQUAL "linux")
 endif()
 
@@ -133,7 +140,23 @@ elseif(RUNTIME_MONO)
   message(STATUS "${CORECLR} ${DOTNET_LIBRARY_PATH}")
 endif()
 
-if(DOTNET_PLATFORM STREQUAL "win")
+if(BUILD_SDL2)
+  set(SDL2_DISABLE_SDL2MAIN 1)
+  set(SDL_TEST 0)
+  set(BUILD_SHARED_LIBS 0)
+  set(SDL_VULKAN 0)
+  set(SDL_DIRECTX 0)
+  include(FetchContent)
+  FetchContent_Declare(
+    sdl2
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL
+    GIT_TAG        SDL2
+  )
+  FetchContent_MakeAvailable(sdl2)
+
+  #set(SDL2_INCLUDE_DIRS "${SDL2_BINARY_DIR}/include" "${SDL2_BINARY_DIR}/include/SDL2")
+
+elseif(DOTNET_PLATFORM STREQUAL "win")
   include(FetchContent)
   FetchContent_Declare(
     sdl2
@@ -144,12 +167,15 @@ if(DOTNET_PLATFORM STREQUAL "win")
 
   list(APPEND CMAKE_PREFIX_PATH "${sdl2_SOURCE_DIR}")
 
-  # there are two libs, nethost.lib (dynamic) and libnethost.lib (static), and we want the static one
-  set(NETHOST "${DOTNET_APPHOST_PATH}/libnethost.lib")
+  set(HAVE_SDL2_PACKAGE 1)
+else()
+  set(HAVE_SDL2_PACKAGE 1)
 endif()
 
-find_package(SDL2 REQUIRED)
-message(STATUS "${SDL2_INCLUDE_DIRS} ${SDL2_LIBRARIES}")
+if(HAVE_SDL2_PACKAGE)
+  find_package(SDL2 REQUIRED)
+  message(STATUS "${SDL2_INCLUDE_DIRS} ${SDL2_LIBRARIES}")
+endif()
 
 if(DOTNET_PLATFORM STREQUAL "osx" OR DOTNET_PLATFORM STREQUAL "ios")
   set(USE_MOLTENVK 1)
@@ -164,10 +190,20 @@ else()
   set(Vulkan_MoltenVK_LIBRARY "")
 endif()
 
+set(IMGUI_STATIC 1)
+
+make_directory(packages)
+execute_process(
+  COMMAND ${CMAKE_COMMAND} 
+    -Din_file:FILEPATH=${CMAKE_CURRENT_SOURCE_DIR}/cimgui/CMakeLists.txt
+    -Dpatch_file:FILEPATH=${CMAKE_CURRENT_SOURCE_DIR}/cimgui.patch
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/PatchFile.cmake
+)
+
 add_subdirectory(managed)
+add_subdirectory(cimgui)
 add_subdirectory(native)
 
-add_custom_target(program ALL)
 add_dependencies(program
   packages
   csharpify_managed_bundled

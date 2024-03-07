@@ -1,18 +1,77 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
+using ImGuiNET;
+using SDL2;
+
+internal static unsafe class Util
+{
+	internal const int StackAllocationSizeLimit = 2048;
+	internal static byte* Allocate(int byteCount) => (byte*)Marshal.AllocHGlobal(byteCount);
+	internal static int GetUtf8(ReadOnlySpan<char> s, byte* utf8Bytes, int utf8ByteCount)
+	{
+		if (s.IsEmpty)
+		{
+			return 0;
+		}
+
+		fixed (char* utf16Ptr = s)
+		{
+			return Encoding.UTF8.GetBytes(utf16Ptr, s.Length, utf8Bytes, utf8ByteCount);
+		}
+	}
+	internal static void Free(byte* ptr) => Marshal.FreeHGlobal((IntPtr)ptr);
+
+}
 
 public class Program {
 
 	[UnmanagedCallersOnly()]
-	private static void CallMe() {
+	private static void OnStart() {
 		Console.WriteLine("hello");
+
+		SDL.SDL_SetHint(SDL.SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "1");
 	}
 
 	[UnmanagedCallersOnly()]
-    private static void InstanceCall()
+    private static void OnUpdate()
     {
+	    ImGui.Begin("Hello, world!");
+	    ImGui.End();
     }
+
+    public static unsafe bool Begin(ReadOnlySpan<char> name)
+    {
+	    byte* native_name;
+	    int name_byteCount = 0;
+	    if (name != null)
+	    {
+		    name_byteCount = Encoding.UTF8.GetByteCount(name);
+		    if (name_byteCount > Util.StackAllocationSizeLimit)
+		    {
+			    native_name = Util.Allocate(name_byteCount + 1);
+		    }
+		    else
+		    {
+			    byte* native_name_stackBytes = stackalloc byte[name_byteCount + 1];
+			    native_name = native_name_stackBytes;
+		    }
+		    int native_name_offset = Util.GetUtf8(name, native_name, name_byteCount);
+		    native_name[native_name_offset] = 0;
+	    }
+	    else { native_name = null; }
+	    byte* p_open = null;
+	    ImGuiWindowFlags flags = (ImGuiWindowFlags)0;
+	    byte ret = igBegin(native_name, p_open, flags);
+	    if (name_byteCount > Util.StackAllocationSizeLimit)
+	    {
+		    Util.Free(native_name);
+	    }
+	    return ret != 0;
+    }
+    [DllImport("__Internal")]
+    public static unsafe extern byte igBegin(byte* name, byte* p_open, ImGuiWindowFlags flags);
 
     //[MethodImpl(MethodImplOptions.InternalCall)]
     [DllImport ("__Internal")]

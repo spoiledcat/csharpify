@@ -52,6 +52,12 @@ configure_file(config.h.in include/config.h)
 
 add_executable(csharpify ${SHARED_SOURCES} ${RUNTIME_SOURCES})
 
+# gcc uses -Wl,--whole-archive instead of force_load
+# target_link_libraries(csharpify -Wl,-force_load "${cimgui_BINARY_DIR}/cimgui.a")
+target_link_libraries(csharpify cimgui SDL2-static)
+add_dependencies(csharpify cimgui)
+add_dependencies(csharpify SDL2-static)
+
 target_sources(csharpify
 	PRIVATE FILE_SET HEADERS
 	BASE_DIRS include ${PROJECT_BINARY_DIR}/include
@@ -95,18 +101,35 @@ message(STATUS "SDL2_INCLUDE_DIRS: ${SDL2_INCLUDE_DIRS}")
 message(STATUS "Vulkan_INCLUDE_DIRS: ${Vulkan_INCLUDE_DIRS}")
 message(STATUS "IMGUI_DIR: ${IMGUI_DIR}")
 message(STATUS "IMGUI_DIR/backends: ${IMGUI_DIR}/backends")
+message(STATUS "NETHOST: ${NETHOST}")
 
 target_include_directories(csharpify PRIVATE
 	${DOTNET_INCLUDE_DIRS}
-	${generated_INCLUDE_DIR} 
-	${SDL2_INCLUDE_DIRS} 
-	${Vulkan_INCLUDE_DIRS} 
-	"${IMGUI_DIR}" 
+	${generated_INCLUDE_DIR}
+	${SDL2_INCLUDE_DIRS}
+	${Vulkan_INCLUDE_DIRS}
+	"${IMGUI_DIR}"
 	"${IMGUI_DIR}/backends"
+	"${CMAKE_SOURCE_DIR}/cimgui"
 )
 
-target_link_libraries(csharpify 
-	${SDL2_LIBRARIES} 
+if(BUILD_SDL2)
+	target_include_directories(csharpify PRIVATE
+		"$<BUILD_INTERFACE:${SDL2_BINARY_DIR}/include>"
+		"$<BUILD_INTERFACE:${SDL2_BINARY_DIR}/include/SDL2>"
+		"$<BUILD_INTERFACE:${SDL2_BINARY_DIR}/include-config-$<LOWER_CASE:$<CONFIG>>/SDL2>"
+		"$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+		"$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/SDL2>"
+	)
+else()
+	target_include_directories(csharpify PRIVATE
+		${SDL2_INCLUDE_DIRS}
+	)
+
+endif()
+
+target_link_libraries(csharpify
+	#${SDL2_LIBRARIES}
 	${Vulkan_LIBRARY}
 )
 
@@ -122,14 +145,14 @@ if(DOTNET_PLATFORM STREQUAL "win")
 endif()
 
 if(USE_MOLTENVK)
-	target_link_libraries(csharpify 
-		${Vulkan_MoltenVK_LIBRARY} 
+	target_link_libraries(csharpify
+		${Vulkan_MoltenVK_LIBRARY}
 	)
 endif()
 
 if(DOTNET_PLATFORM STREQUAL "osx")
-	target_link_libraries(csharpify 
-		${IOKIT} 
+	target_link_libraries(csharpify
+		${IOKIT}
 		${CORECLR}
 	)
 endif()
@@ -140,11 +163,14 @@ link_directories(csharpify ${DOTNET_LIBRARY_PATH})
 
 add_dependencies(csharpify csharpify_managed)
 set(CSHARPIFY_FILE "${CMAKE_EXECUTABLE_PREFIX}csharpify${CMAKE_EXECUTABLE_SUFFIX}")
-get_target_property(SDL2_DLL SDL2::SDL2 "IMPORTED_LOCATION")
 
-list(APPEND build_outputs
-	"${SDL2_DLL}"
-)
+if(NOT BUILD_SDL2)
+	get_target_property(SDL2_DLL SDL2::SDL2 "IMPORTED_LOCATION")
+
+	list(APPEND build_outputs
+		"${SDL2_DLL}"
+	)
+endif()
 
 # Bundle everything into a runnable directory
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -155,6 +181,7 @@ foreach(thing ${build_outputs})
 endforeach()
 
 list(APPEND bundle_outputs "${CMAKE_BINARY_DIR}/bin/${CSHARPIFY_FILE}")
+
 add_custom_command(
   OUTPUT  ${bundle_outputs}
 	COMMAND ${CMAKE_COMMAND} -E copy -t "${CMAKE_BINARY_DIR}/bin/" "$<TARGET_FILE:csharpify>" ${build_outputs}
