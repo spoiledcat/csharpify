@@ -144,7 +144,7 @@ if(BUILD_SDL2)
   set(SDL2_DISABLE_SDL2MAIN 1)
   set(SDL_TEST 0)
   set(BUILD_SHARED_LIBS 0)
-  set(SDL_VULKAN 0)
+  set(SDL_VULKAN 1)
   set(SDL_DIRECTX 0)
   include(FetchContent)
   FetchContent_Declare(
