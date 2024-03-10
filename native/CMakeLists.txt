@@ -54,9 +54,13 @@ configure_file(config.h.in include/config.h)
 
 add_executable(csharpify ${SHARED_SOURCES} ${RUNTIME_SOURCES})
 
+if(MSVC)
+	target_link_options(csharpify PRIVATE "/WHOLEARCHIVE:$<TARGET_FILE:cimgui>")
+	target_link_libraries(csharpify SDL2-static)
+else()
 # gcc uses -Wl,--whole-archive instead of force_load
-# target_link_libraries(csharpify -Wl,-force_load "${cimgui_BINARY_DIR}/cimgui.a")
-target_link_libraries(csharpify cimgui SDL2-static)
+	target_link_libraries(csharpify -Wl,-force_load "${cimgui_BINARY_DIR}/cimgui.a")
+endif()
 add_dependencies(csharpify cimgui)
 add_dependencies(csharpify SDL2-static)
 
