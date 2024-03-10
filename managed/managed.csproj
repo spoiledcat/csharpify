@@ -9,11 +9,11 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
   </PropertyGroup>
 
-  <ItemGroup>
+  <!-- <ItemGroup>
     <DirectPInvoke Include="__Internal" />
     <DirectPInvoke Include="$(TargetName)" />
     <DirectPInvoke Include="cimgui" />
-  </ItemGroup>
+  </ItemGroup> -->
 
   <ItemGroup>
     <PackageReference Include="SDL2-CS" Version="[2.0.30]" />

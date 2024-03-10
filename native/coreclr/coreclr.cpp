@@ -17,6 +17,7 @@
 
 #include <cassert>
 #include <dnne.h>
+#include <stdio.h>
 
 namespace fs = std::filesystem; 
 
@@ -39,13 +40,6 @@ static property_array _property_values  {
 	nullptr,
 };
 
-
-static property_array _property_keys2 {
-};
-
-static property_array _property_values2 {
-};
-
 void *coreclr_handle = NULL;
 unsigned int coreclr_domainId = 0;
 
@@ -59,9 +53,15 @@ static void* load_library(const std::wstring& path)
 }
 static void* get_export(void* h, const std::string& name)
 {
-    assert(h != NULL && !name.empty());
+    assert(!name.empty());
+
+	if (!h)
+	{
+		h = GetModuleHandle(nullptr);
+	}
+
     void* f = GetProcAddress((HMODULE)h, name.c_str());
-    assert(f != NULL);
+    assert(f != nullptr);
     return f;
 }
 
@@ -166,7 +166,7 @@ void *get_fast_callable_managed_function(
 }
 #endif
 
-#ifdef _WIN32
+#if _WIN32 && 0
 
 int load_managed_runtime()
 {
@@ -177,6 +177,118 @@ int load_managed_runtime()
 }
 
 #else
+
+/*
+ * vscprintf:
+ * MSVC implements this as _vscprintf, thus we just 'symlink' it here
+ * GNU-C-compatible compilers do not implement this, thus we implement it here
+ */
+#ifdef _MSC_VER
+#define vscprintf _vscprintf
+#endif
+
+#ifdef __GNUC__
+int vscprintf(const char *format, va_list ap)
+{
+    va_list ap_copy;
+    va_copy(ap_copy, ap);
+    int retval = vsnprintf(NULL, 0, format, ap_copy);
+    va_end(ap_copy);
+    return retval;
+}
+#endif
+
+#ifdef _MSC_VER
+int vasprintf(char **strp, const char *format, va_list ap)
+{
+	const int len = vscprintf(format, ap);
+    if (len == -1)
+        return -1;
+    char *str = (char*)malloc((size_t)len + 1);
+    if (!str)
+        return -1;
+	const int retval = vsnprintf(str, len + 1, format, ap);
+    if (retval == -1) {
+        free(str);
+        return -1;
+    }
+    *strp = str;
+    return retval;
+}
+#endif
+
+char *strdup_printf (int* len, const char *msg, ...)
+{
+	// COOP: no managed memory access: any mode
+	va_list args;
+	char *formatted = NULL;
+
+	va_start (args, msg);
+	*len = vasprintf (&formatted, msg, args);
+	va_end (args);
+
+	return formatted;
+}
+
+ void* pinvoke_override (const char *libraryName, const char *entrypointName)
+ {
+ 	void* symbol = nullptr;
+ 	if (!strcmp(libraryName, "__Internal") ||
+ 		!strcmp(libraryName, "SDL2") ||
+ 		!strcmp(libraryName, "cimgui")) {
+ 		symbol = get_export(nullptr, entrypointName);
+ 	}
+ 	return symbol;
+ }
+
+
+#define HOST_PROPERTY_RUNTIME_CONTRACT WIDE("HOST_RUNTIME_CONTRACT")
+#define HOST_PROPERTY_APP_PATHS WIDE("APP_PATHS")
+#define HOST_PROPERTY_BUNDLE_PROBE WIDE("BUNDLE_PROBE")
+#define HOST_PROPERTY_ENTRY_ASSEMBLY_NAME WIDE("ENTRY_ASSEMBLY_NAME")
+#define HOST_PROPERTY_HOSTPOLICY_EMBEDDED WIDE("HOSTPOLICY_EMBEDDED")
+#define HOST_PROPERTY_NATIVE_DLL_SEARCH_DIRECTORIES WIDE("NATIVE_DLL_SEARCH_DIRECTORIES")
+#define HOST_PROPERTY_PINVOKE_OVERRIDE WIDE("PINVOKE_OVERRIDE")
+#define HOST_PROPERTY_PLATFORM_RESOURCE_ROOTS "PLATFORM_RESOURCE_ROOTS"
+#define HOST_PROPERTY_TRUSTED_PLATFORM_ASSEMBLIES WIDE("TRUSTED_PLATFORM_ASSEMBLIES")
+#define HOST_PROPERTY_RUNTIME_IDENTIFIER WIDE("RUNTIME_IDENTIFIER")
+#define HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY WIDE("APP_CONTEXT_BASE_DIRECTORY") // path to where the managed assemblies are (usually at least - RID-specific assemblies will be in subfolders)
+
+
+char_t* pinvoke_override_ptr;
+
+const char_t *propertyKeys[] = {
+	HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY,
+	HOST_PROPERTY_APP_PATHS,
+	HOST_PROPERTY_TRUSTED_PLATFORM_ASSEMBLIES,
+	HOST_PROPERTY_RUNTIME_IDENTIFIER,
+	HOST_PROPERTY_PINVOKE_OVERRIDE,
+	HOST_PROPERTY_NATIVE_DLL_SEARCH_DIRECTORIES,
+};
+char_t *propertyValues[] = {
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr
+};
+
+
+char_t* copy(WSTRING str) {
+	char_t* ret = new char_t[str.size()+1];
+	std::copy(str.begin(), str.end(), ret);
+	ret[str.size()] = L'\0';
+	return ret;
+}
+
+//char* copy(std::string str) {
+//	char* ret = new char[str.size()+1];
+//	std::copy(str.begin(), str.end(), ret);
+//	ret[str.size()] = '\0';
+//	return ret;
+//}
+
 int load_managed_runtime()
 {
 	fs::path assemblyPath = ".";
@@ -184,6 +296,7 @@ int load_managed_runtime()
 	fs::path startAssembly = assemblyPath / assemblyName;
 
 	auto basePath = normalizePath(".");
+
 	auto runtimePath = fs::path{normalizePath("sdk")};
 	
 	// _property_values[APP_CONTEXT_BASE_DIRECTORY_INDEX] = runtimePath.c_str();
@@ -209,35 +322,51 @@ int load_managed_runtime()
 		}
 	}
 
-	const char *propertyKeys[] = {
-		"APP_CONTEXT_BASE_DIRECTORY", // path to where the managed assemblies are (usually at least - RID-specific assemblies will be in subfolders)
-		"APP_PATHS",
-		"TRUSTED_PLATFORM_ASSEMBLIES",
-		"RUNTIME_IDENTIFIER",
-	};
-	const char *propertyValues[] = {
-		basePath.c_str(),
-		basePath.c_str(),
-		paths.c_str(),
-		runtime_identifier,
-	};
+    int len;
+	char *strptr = strdup_printf (&len, "0x%pZ", &pinvoke_override);
+	pinvoke_override_ptr = StringToUnicode(strptr, len);
+	//pinvoke_override_ptr = copy(str);
+	//printf("%ls\n", pinvoke_override_ptr);
 
 
-    int rv = coreclr_initialize (
-		runtimePath.string().c_str(),
-		ASSEMBLYNAME,
-		4,
-		propertyKeys,
-		propertyValues,
-		&coreclr_handle,
-		&coreclr_domainId
-	);
+	//const char *propertyKeys[] = {
+	//	"APP_CONTEXT_BASE_DIRECTORY", // path to where the managed assemblies are (usually at least - RID-specific assemblies will be in subfolders)
+	//	"APP_PATHS",
+	//	"TRUSTED_PLATFORM_ASSEMBLIES",
+	//	"RUNTIME_IDENTIFIER",
+	//	"PINVOKE_OVERRIDE"
+	//};
+	//const char *propertyValues[] = {
+	//	basePath.c_str(),
+	//	basePath.c_str(),
+	//	paths.c_str(),
+	//	runtime_identifier,
+	//	pinvokeOverride,
+	//};
 
-    return rv;
+	propertyValues[0] = copy(StringToUnicode(basePath));
+	propertyValues[1] = copy(StringToUnicode(basePath));
+	propertyValues[2] = copy(StringToUnicode(paths));
+	propertyValues[5] = copy(StringToUnicode(basePath));
+
+ //   int rv = coreclr_initialize (
+	//	basePath.c_str(),
+	//	ASSEMBLYNAME,
+	//	sizeof(propertyKeys) / sizeof(char*),
+	//	propertyKeys,
+	//	propertyValues,
+	//	&coreclr_handle,
+	//	&coreclr_domainId
+	//);
+
+ //   return rv;
+
+	return 0;
 }
 
 int register_icall(const char* name, const void* fnptr)
 {
+	return 0;
 }
 #endif
 

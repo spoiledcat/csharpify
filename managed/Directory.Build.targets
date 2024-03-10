@@ -18,6 +18,9 @@
     <CSharpify_Generated Include="$(DnnePlatformSourcePath)/dnne.h" >
       <OutputFileName>dnne.h</OutputFileName>
     </CSharpify_Generated>
+    <CSharpify_Generated Include="$(DnnePlatformSourcePath)/platform.c" >
+      <OutputFileName>platform.c</OutputFileName>
+    </CSharpify_Generated>
     <Clean Include="@(CSharpify_Generated->'$(CSharpify_GeneratedPath)%(OutputFileName)')" />
   </ItemGroup>
 

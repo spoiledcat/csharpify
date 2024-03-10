@@ -21,41 +21,49 @@ endif()
 add_custom_command(
   OUTPUT ${build_outputs} "${generated_INCLUDE_DIR}/exports.g.c"
   COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} build \"${CSPROJ}\" --nologo -c $<CONFIG> -o \"${PROJECT_BINARY_DIR}\" /p:UseMonoRuntime=$<IF:$<BOOL:${RUNTIME_MONO}>,true,false>
-  BYPRODUCTS "${generated_INCLUDE_DIR}/dnne.h" "${generated_INCLUDE_DIR}/exports.h"
+  BYPRODUCTS "${generated_INCLUDE_DIR}/dnne.h" "${generated_INCLUDE_DIR}/exports.h" "${generated_INCLUDE_DIR}/platform.c"
   DEPENDS "Directory.Build.props" "Directory.Build.targets" "main.cs" "managed.csproj"
 )
 
 add_custom_target(build DEPENDS ${build_outputs} "${generated_INCLUDE_DIR}/exports.g.c")
 
+set(publish_args "")
+set(dotnet_publish_dir "${csharpify_managed_PUBLISH_DIR}/publish")
+set(dotnet_sc_dir "${csharpify_managed_PUBLISH_DIR}/sc")
+set(bin_dir "${CMAKE_BINARY_DIR}/native/Debug")
+
 add_custom_command(
-  OUTPUT publish/managed.dll
-  COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} publish \"${CSPROJ}\" --sc -r ${RID} --nologo -c $<CONFIG> -o \"${csharpify_managed_PUBLISH_DIR}\"  /p:UseMonoRuntime=$<IF:$<BOOL:${RUNTIME_MONO}>,true,false>
-  DEPENDS managed.dll
+  OUTPUT "${dotnet_publish_dir}/managed.dll"
+  COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} publish \"${CSPROJ}\" ${publish_args} --nologo -c $<CONFIG> -o \"${dotnet_publish_dir}\"  /p:UseMonoRuntime=$<IF:$<BOOL:${RUNTIME_MONO}>,true,false>
+  DEPENDS ${build_outputs} "${generated_INCLUDE_DIR}/exports.g.c"
 )
 
 # Bundle everything into a runnable directory
-file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-
-add_custom_target(copy_sdk
-  COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${csharpify_managed_PUBLISH_DIR}" "${CMAKE_BINARY_DIR}/bin/sdk"
-  DEPENDS publish/managed.dll
-)
-
-foreach(thing ${build_outputs})
-list(APPEND bundle_outputs "${CMAKE_BINARY_DIR}/bin/${thing}") 
-endforeach() 
+file(MAKE_DIRECTORY "${bin_dir}")
 
 add_custom_command(
-  OUTPUT ${bundle_outputs}
-  COMMAND ${CMAKE_COMMAND} -E copy -t "${CMAKE_BINARY_DIR}/bin/" ${build_outputs}
-  DEPENDS managed.dll
+  OUTPUT "${bin_dir}/managed.dll"
+  COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} publish \"${CSPROJ}\" ${publish_args} --nologo -c $<CONFIG> -o \"${bin_dir}\"  /p:UseMonoRuntime=$<IF:$<BOOL:${RUNTIME_MONO}>,true,false>
+  DEPENDS ${build_outputs} "${generated_INCLUDE_DIR}/exports.g.c"
 )
 
-list(APPEND sdk ${bundle_outputs})
+add_custom_target(managed_publish DEPENDS "${dotnet_publish_dir}/managed.dll" "${bin_dir}/managed.dll")
+
+add_custom_command(
+  OUTPUT "${dotnet_sc_dir}/managed.dll"
+  COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} publish \"${CSPROJ}\" ${publish_args} --sc -r ${RID} --nologo -c $<CONFIG> -o \"${dotnet_sc_dir}\"  /p:UseMonoRuntime=$<IF:$<BOOL:${RUNTIME_MONO}>,true,false>
+  DEPENDS ${build_outputs} "${generated_INCLUDE_DIR}/exports.g.c"
+)
+
+add_custom_target(managed_sc DEPENDS "${dotnet_sc_dir}/managed.dll")
 
 if(NOT(DOTNET_PLATFORM STREQUAL "win" AND DOTNET_RUNTIME STREQUAL "coreclr"))
-  list(APPEND sdk copy_sdk)
+  add_custom_target(copy_sdk
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${dotnet_sc_dir}" "${bin_dir}/sdk"
+    DEPENDS "${dotnet_sc_dir}/System.dll"
+  )
+list(APPEND sdk copy_sdk)
 endif()
 
-add_custom_target(csharpify_managed DEPENDS ${build_outputs})
-add_custom_target(csharpify_managed_bundled DEPENDS ${sdk})
+add_custom_target(csharpify_managed ALL DEPENDS OUTPUT "${dotnet_publish_dir}/managed.dll" "${dotnet_sc_dir}/managed.dll" "${bin_dir}/managed.dll")
+add_custom_target(csharpify_managed_bundled ALL DEPENDS ${sdk})

@@ -52,6 +52,24 @@ std::string UnicodeToString(const std::wstring& wstr)
 	WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), strTo.data(), size_needed, nullptr, nullptr);
 	return strTo;
 }
+
+std::wstring StringToUnicode(const std::string& str)
+{
+	if (str.empty()) return {};
+	const int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), nullptr, 0);
+	std::wstring strTo(size_needed, 0);
+	MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), strTo.data(), size_needed);
+	return strTo;
+}
+
+char_t* StringToUnicode(const char* str, int len)
+{
+	const int size_needed = MultiByteToWideChar(CP_UTF8, 0, str, len, NULL, 0);
+    char_t* ret = (char_t*)malloc(sizeof(char_t*) * size_needed);
+	MultiByteToWideChar(CP_UTF8, 0, str, len, ret, size_needed);
+	return ret;
+}
+
 #endif
 
 #endif// CSHARPIFY_UTILS_H_

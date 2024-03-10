@@ -46,5 +46,25 @@
         }
       }
 	 }
+	],
+  "buildPresets": [
+    {
+      "name": "coreclr",
+      "displayName": "CoreCLR",
+      "description": "Build with CoreCLR",
+      "configurePreset": "coreclr"
+	 },
+    {
+      "name": "mono",
+      "displayName": "Mono",
+      "description": "Build with Mono",
+      "configurePreset": "mono"
+	 },
+    {
+      "name": "nativeaot",
+      "displayName": "NativeAOT",
+      "description": "Build with NativeAOT",
+      "configurePreset": "nativeaot"
+	 }
 	]
 }

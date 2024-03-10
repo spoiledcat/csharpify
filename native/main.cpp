@@ -4,6 +4,14 @@
 #include "managed_bridge.h"
 #include "imgui.h"
 #include "imgui_internal.h"
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <Windows.h>
+#endif
+
+
 // #include "cimgui.h"
 
 // ImGuiContext *ctx;
@@ -32,6 +40,10 @@ int main(int argc, char** argv)
 	load_managed_runtime();
 //    CallingBackToNativeLand_ptr = CallingBackToNativeLand;
 //    register_icall("Program::CallingBackToNativeLand", (const void*)CallingBackToNativeLand_ptr);
+
+    //printf("Ready to attach");
+    //while( !::IsDebuggerPresent() )
+    //::Sleep( 100 );
 
 	OnStart();
     auto data = new NativeData{42};

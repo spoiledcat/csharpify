@@ -27,11 +27,29 @@ internal static unsafe class Util
 
 public class Program {
 
+	static Program()
+    {
+		Console.WriteLine("static Program");
+
+		NativeLibrary.SetDllImportResolver(typeof(Program).Assembly,
+			(libraryName, assembly, searchPath) =>
+			{
+				Console.WriteLine($"library:{libraryName} assembly:{assembly}");
+                return libraryName switch
+                {
+                    "__Internal" => NativeLibrary.GetMainProgramHandle(),
+                    "cimgui" => NativeLibrary.GetMainProgramHandle(),
+                    "SDL2" => NativeLibrary.GetMainProgramHandle(),
+                    _ => IntPtr.Zero
+                };
+            });
+	}
+
 	[UnmanagedCallersOnly()]
 	private static void OnStart() {
 		Console.WriteLine("hello");
 
-		SDL.SDL_SetHint(SDL.SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "1");
+		//SDL.SDL_SetHint(SDL.SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "1");
 	}
 
 	[UnmanagedCallersOnly()]

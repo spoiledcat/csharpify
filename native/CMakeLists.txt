@@ -2,6 +2,8 @@ project(csharpify_native)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 17)
 
+set(CSHARPIFY_FILE "${CMAKE_EXECUTABLE_PREFIX}csharpify${CMAKE_EXECUTABLE_SUFFIX}")
+
 cmake_path(APPEND CMAKE_SOURCE_DIR "imgui" OUTPUT_VARIABLE IMGUI_DIR)
 
 file(READ ${IMGUI_DIR}/examples/example_sdl2_vulkan/main.cpp IMGUI_GEN)
@@ -40,7 +42,7 @@ set(RUNTIME_SOURCES "")
 
 if(RUNTIME_CORECLR)
 	if(DOTNET_PLATFORM STREQUAL "win")
-		list(APPEND RUNTIME_SOURCES ${CMAKE_SOURCE_DIR}/.packages/dnne/2.0.6/tools/platform/platform.c)
+		list(APPEND RUNTIME_SOURCES ${generated_INCLUDE_DIR}/platform.c)
 	endif()
 	list(APPEND RUNTIME_SOURCES coreclr/coreclr.cpp)
 elseif(RUNTIME_MONO)
@@ -60,7 +62,7 @@ add_dependencies(csharpify SDL2-static)
 
 target_sources(csharpify
 	PRIVATE FILE_SET HEADERS
-	BASE_DIRS include ${PROJECT_BINARY_DIR}/include
+	BASE_DIRS include ${PROJECT_BINARY_DIR}/include ${generated_INCLUDE_DIR}
 	FILES
 	include/imgui_bridge.h
 	include/main.h
@@ -68,6 +70,8 @@ target_sources(csharpify
 	include/managed_bridge.h
 	include/utils.h
 	${PROJECT_BINARY_DIR}/include/config.h
+	${generated_INCLUDE_DIR}/dnne.h
+	${generated_INCLUDE_DIR}/exports.h
 )
 
 target_sources(csharpify
@@ -142,6 +146,7 @@ if(DOTNET_PLATFORM STREQUAL "win")
 	target_link_libraries(csharpify
 		${NETHOST}
 	)
+
 endif()
 
 if(USE_MOLTENVK)
@@ -157,12 +162,11 @@ if(DOTNET_PLATFORM STREQUAL "osx")
 	)
 endif()
 
-target_compile_definitions(csharpify PRIVATE DNNE_COMPILE_AS_SOURCE)
+target_compile_definitions(csharpify PRIVATE DNNE_COMPILE_AS_SOURCE DNNE_SELF_CONTAINED_RUNTIME)
 
 link_directories(csharpify ${DOTNET_LIBRARY_PATH})
 
 add_dependencies(csharpify csharpify_managed)
-set(CSHARPIFY_FILE "${CMAKE_EXECUTABLE_PREFIX}csharpify${CMAKE_EXECUTABLE_SUFFIX}")
 
 if(NOT BUILD_SDL2)
 	get_target_property(SDL2_DLL SDL2::SDL2 "IMPORTED_LOCATION")
@@ -182,13 +186,23 @@ endforeach()
 
 list(APPEND bundle_outputs "${CMAKE_BINARY_DIR}/bin/${CSHARPIFY_FILE}")
 
+message(STATUS "outputs ${build_outputs}")
+
 add_custom_command(
-  OUTPUT  ${bundle_outputs}
+	OUTPUT  ${bundle_outputs}
 	COMMAND ${CMAKE_COMMAND} -E copy -t "${CMAKE_BINARY_DIR}/bin/" "$<TARGET_FILE:csharpify>" ${build_outputs}
-  DEPENDS ${build_outputs}
+	DEPENDS ${build_outputs}
 )
 
-add_custom_target(csharpify_native_bundled DEPENDS "${bundle_outputs}")
+list(APPEND symbols "$<$<CONFIG:Debug>:${PROJECT_BINARY_DIR}/Debug/${CMAKE_EXECUTABLE_PREFIX}csharpify.pdb>")
+list(APPEND bundle_symbols "$<$<CONFIG:Debug>:${CMAKE_BINARY_DIR}/bin/${CMAKE_EXECUTABLE_PREFIX}csharpify.pdb>")
+add_custom_command(
+	OUTPUT  ${bundle_symbols}
+	COMMAND ${CMAKE_COMMAND} -E copy -t "${CMAKE_BINARY_DIR}/bin/" ${symbols}
+	DEPENDS ${symbols}
+)
+
+add_custom_target(csharpify_native_bundled ALL DEPENDS ${bundle_outputs} ${bundle_symbols})
 
 add_custom_target(run
 	COMMAND "${CMAKE_BINARY_DIR}/bin/${CSHARPIFY_FILE}"
