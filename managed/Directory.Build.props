@@ -1,6 +1,6 @@
 <Project>
 
   <ItemGroup>
-    <PackageReference Include="DNNE" Version="2.0.6.1" GeneratePathProperty="true" />
+    <PackageReference Include="DNNE" Version="2.0.6.2" GeneratePathProperty="true" />
   </ItemGroup>
 </Project>

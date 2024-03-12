@@ -27,24 +27,6 @@ internal static unsafe class Util
 
 public class Program {
 
-	static Program()
-    {
-		Console.WriteLine("static Program");
-
-		NativeLibrary.SetDllImportResolver(typeof(Program).Assembly,
-			(libraryName, assembly, searchPath) =>
-			{
-				Console.WriteLine($"library:{libraryName} assembly:{assembly}");
-                return libraryName switch
-                {
-                    "__Internal" => NativeLibrary.GetMainProgramHandle(),
-                    "cimgui" => NativeLibrary.GetMainProgramHandle(),
-                    "SDL2" => NativeLibrary.GetMainProgramHandle(),
-                    _ => IntPtr.Zero
-                };
-            });
-	}
-
 	[UnmanagedCallersOnly()]
 	private static void OnStart() {
 		Console.WriteLine("hello");
@@ -55,39 +37,12 @@ public class Program {
 	[UnmanagedCallersOnly()]
     private static void OnUpdate()
     {
-	    ImGui.Begin("Hello, world!");
-	    ImGui.End();
+	   //  ImGui.Begin("Hello, world!");
+	   //  ImGui.End();
+	   ImGui.ShowDemoWindow();
     }
 
-    public static unsafe bool Begin(ReadOnlySpan<char> name)
-    {
-	    byte* native_name;
-	    int name_byteCount = 0;
-	    if (name != null)
-	    {
-		    name_byteCount = Encoding.UTF8.GetByteCount(name);
-		    if (name_byteCount > Util.StackAllocationSizeLimit)
-		    {
-			    native_name = Util.Allocate(name_byteCount + 1);
-		    }
-		    else
-		    {
-			    byte* native_name_stackBytes = stackalloc byte[name_byteCount + 1];
-			    native_name = native_name_stackBytes;
-		    }
-		    int native_name_offset = Util.GetUtf8(name, native_name, name_byteCount);
-		    native_name[native_name_offset] = 0;
-	    }
-	    else { native_name = null; }
-	    byte* p_open = null;
-	    ImGuiWindowFlags flags = (ImGuiWindowFlags)0;
-	    byte ret = igBegin(native_name, p_open, flags);
-	    if (name_byteCount > Util.StackAllocationSizeLimit)
-	    {
-		    Util.Free(native_name);
-	    }
-	    return ret != 0;
-    }
+
     [DllImport("__Internal")]
     public static unsafe extern byte igBegin(byte* name, byte* p_open, ImGuiWindowFlags flags);
 

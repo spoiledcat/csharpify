@@ -42,9 +42,13 @@ set(RUNTIME_SOURCES "")
 
 if(RUNTIME_CORECLR)
 	if(DOTNET_PLATFORM STREQUAL "win")
-		list(APPEND RUNTIME_SOURCES ${generated_INCLUDE_DIR}/platform.c)
+		list(APPEND RUNTIME_SOURCES
+			${generated_INCLUDE_DIR}/platform.c
+			coreclr/coreclr_win.cpp
+		)
+	else()
+		list(APPEND RUNTIME_SOURCES coreclr/coreclr.cpp)
 	endif()
-	list(APPEND RUNTIME_SOURCES coreclr/coreclr.cpp)
 elseif(RUNTIME_MONO)
 	list(APPEND RUNTIME_SOURCES mono/mono.cpp)
 else()
@@ -56,18 +60,27 @@ add_executable(csharpify ${SHARED_SOURCES} ${RUNTIME_SOURCES})
 
 if(MSVC)
 	target_link_options(csharpify PRIVATE "/WHOLEARCHIVE:$<TARGET_FILE:cimgui>")
-	target_link_libraries(csharpify SDL2-static)
 else()
 # gcc uses -Wl,--whole-archive instead of force_load
 	target_link_libraries(csharpify -Wl,-force_load "${cimgui_BINARY_DIR}/cimgui.a")
 endif()
+
+
+if(BUILD_SDL2)
+	target_link_libraries(csharpify SDL2-static)
+	add_dependencies(csharpify SDL2-static)
+else()
+	target_link_libraries(csharpify ${SDL2_LIBRARIES})
+
+endif()
+
 add_dependencies(csharpify cimgui)
-add_dependencies(csharpify SDL2-static)
 
 target_sources(csharpify
 	PRIVATE FILE_SET HEADERS
 	BASE_DIRS include ${PROJECT_BINARY_DIR}/include ${generated_INCLUDE_DIR}
 	FILES
+	include/common.h
 	include/imgui_bridge.h
 	include/main.h
 	include/managed_exports.h
@@ -137,7 +150,6 @@ else()
 endif()
 
 target_link_libraries(csharpify
-	#${SDL2_LIBRARIES}
 	${Vulkan_LIBRARY}
 )
 
@@ -198,13 +210,17 @@ add_custom_command(
 	DEPENDS ${build_outputs}
 )
 
-list(APPEND symbols "$<$<CONFIG:Debug>:${PROJECT_BINARY_DIR}/Debug/${CMAKE_EXECUTABLE_PREFIX}csharpify.pdb>")
-list(APPEND bundle_symbols "$<$<CONFIG:Debug>:${CMAKE_BINARY_DIR}/bin/${CMAKE_EXECUTABLE_PREFIX}csharpify.pdb>")
-add_custom_command(
-	OUTPUT  ${bundle_symbols}
-	COMMAND ${CMAKE_COMMAND} -E copy -t "${CMAKE_BINARY_DIR}/bin/" ${symbols}
-	DEPENDS ${symbols}
-)
+if(DOTNET_PLATFORM STREQUAL "win")
+	list(APPEND symbols "$<$<CONFIG:Debug>:${PROJECT_BINARY_DIR}/Debug/${CMAKE_EXECUTABLE_PREFIX}csharpify.pdb>")
+	list(APPEND bundle_symbols "$<$<CONFIG:Debug>:${CMAKE_BINARY_DIR}/bin/${CMAKE_EXECUTABLE_PREFIX}csharpify.pdb>")
+
+	add_custom_command(
+			OUTPUT  ${bundle_symbols}
+			COMMAND ${CMAKE_COMMAND} -E copy -t "${CMAKE_BINARY_DIR}/bin/" ${symbols}
+			DEPENDS ${symbols}
+	)
+endif()
+
 
 add_custom_target(csharpify_native_bundled ALL DEPENDS ${bundle_outputs} ${bundle_symbols})
 

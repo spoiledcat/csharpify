@@ -30,7 +30,12 @@ add_custom_target(build DEPENDS ${build_outputs} "${generated_INCLUDE_DIR}/expor
 set(publish_args "")
 set(dotnet_publish_dir "${csharpify_managed_PUBLISH_DIR}/publish")
 set(dotnet_sc_dir "${csharpify_managed_PUBLISH_DIR}/sc")
-set(bin_dir "${CMAKE_BINARY_DIR}/native/Debug")
+if(DOTNET_PLATFORM STREQUAL "win")
+  set(bin_dir "${CMAKE_BINARY_DIR}/native/Debug")
+else()
+  set(bin_dir "${CMAKE_BINARY_DIR}/native")
+endif()
+
 
 add_custom_command(
   OUTPUT "${dotnet_publish_dir}/managed.dll"
@@ -65,5 +70,5 @@ if(NOT(DOTNET_PLATFORM STREQUAL "win" AND DOTNET_RUNTIME STREQUAL "coreclr"))
 list(APPEND sdk copy_sdk)
 endif()
 
-add_custom_target(csharpify_managed ALL DEPENDS OUTPUT "${dotnet_publish_dir}/managed.dll" "${dotnet_sc_dir}/managed.dll" "${bin_dir}/managed.dll")
+add_custom_target(csharpify_managed ALL DEPENDS "${dotnet_publish_dir}/managed.dll" "${dotnet_sc_dir}/managed.dll" "${bin_dir}/managed.dll")
 add_custom_target(csharpify_managed_bundled ALL DEPENDS ${sdk})
