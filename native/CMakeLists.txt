@@ -25,7 +25,15 @@ if(DOTNET_RUNTIME STREQUAL "coreclr")
 	)
 endif()
 
-list(APPEND SHARED_SOURCES
+list(APPEND coreclr_shared_sources
+	coreclr/coreclr.cpp
+	coreclr/coreclr_win.cpp)
+
+list(APPEND mono_shared_sources
+	mono/mono.cpp
+)
+
+list(APPEND csharpify_sources
 	main.cpp
 	${generated_INCLUDE_DIR}/exports.g.c
 	${PROJECT_BINARY_DIR}/imgui.gen.cpp
@@ -38,31 +46,32 @@ list(APPEND SHARED_SOURCES
 	${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
 )
 
-set(RUNTIME_SOURCES "")
-
-if(RUNTIME_CORECLR)
-	if(DOTNET_PLATFORM STREQUAL "win")
-		list(APPEND RUNTIME_SOURCES
-			${generated_INCLUDE_DIR}/platform.c
-			coreclr/coreclr_win.cpp
-		)
-	else()
-		list(APPEND RUNTIME_SOURCES coreclr/coreclr.cpp)
-	endif()
-elseif(RUNTIME_MONO)
-	list(APPEND RUNTIME_SOURCES mono/mono.cpp)
-else()
+if(RUNTIME_CORECLR AND DOTNET_PLATFORM STREQUAL "win")
+	list(APPEND csharpify_sources ${generated_INCLUDE_DIR}/platform.c)
 endif()
 
 configure_file(config.h.in include/config.h)
 
-add_executable(csharpify ${SHARED_SOURCES} ${RUNTIME_SOURCES})
+add_library(csharpify_coreclr INTERFACE)
+add_library(csharpify_mono INTERFACE)
+
+add_executable(csharpify ${csharpify_sources})
+
+if(RUNTIME_CORECLR)
+	target_link_libraries(csharpify csharpify_coreclr)
+elseif(RUNTIME_MONO)
+	target_link_libraries(csharpify csharpify_mono)
+elseif(RUNTIME_NATIVEAOT)
+endif()
+
+add_dependencies(csharpify packages)
+add_dependencies(csharpify cimgui)
 
 if(MSVC)
 	target_link_options(csharpify PRIVATE "/WHOLEARCHIVE:$<TARGET_FILE:cimgui>")
 else()
-# gcc uses -Wl,--whole-archive instead of force_load
-	target_link_libraries(csharpify -Wl,-force_load "${cimgui_BINARY_DIR}/cimgui.a")
+  # gcc uses -Wl,--whole-archive instead of force_load
+	target_link_options(csharpify PRIVATE -Wl,-force_load "${cimgui_BINARY_DIR}/cimgui.a")
 endif()
 
 
@@ -71,32 +80,69 @@ if(BUILD_SDL2)
 	add_dependencies(csharpify SDL2-static)
 else()
 	target_link_libraries(csharpify ${SDL2_LIBRARIES})
-
 endif()
 
-add_dependencies(csharpify cimgui)
 
-target_sources(csharpify
-	PRIVATE FILE_SET HEADERS
-	BASE_DIRS include ${PROJECT_BINARY_DIR}/include ${generated_INCLUDE_DIR}
-	FILES
+list(APPEND headers_base_dirs
+	include
+	"${DOTNET_APPHOST_PATH}"
+)
+
+list(APPEND headers_shared
 	include/common.h
-	include/imgui_bridge.h
-	include/main.h
 	include/managed_exports.h
 	include/managed_bridge.h
 	include/utils.h
-	${PROJECT_BINARY_DIR}/include/config.h
-	${generated_INCLUDE_DIR}/dnne.h
-	${generated_INCLUDE_DIR}/exports.h
+	include/coreclrhost.h
+	"${DOTNET_APPHOST_PATH}/coreclr_delegates.h"
 )
 
 target_sources(csharpify
 	PRIVATE FILE_SET HEADERS
-	BASE_DIRS "${DOTNET_APPHOST_PATH}"
+	BASE_DIRS ${headers_base_dirs} "${PROJECT_BINARY_DIR}/include" "${generated_INCLUDE_DIR}"
 	FILES
-	"${DOTNET_APPHOST_PATH}/coreclr_delegates.h"
+	${headers_shared}
+	include/imgui_bridge.h
+	include/main.h
+	"${PROJECT_BINARY_DIR}/include/config.h"
+	"${generated_INCLUDE_DIR}/dnne.h"
+	"${generated_INCLUDE_DIR}/exports.h"
 )
+
+target_sources(csharpify_coreclr INTERFACE
+	FILE_SET HEADERS
+	BASE_DIRS ${headers_base_dirs} coreclr
+	FILES
+	${headers_shared}
+	coreclr/bridge.h
+	coreclr/runtime.h
+)
+
+target_sources(csharpify_mono INTERFACE
+	FILE_SET HEADERS
+	BASE_DIRS ${headers_base_dirs} mono
+	FILES
+	${headers_shared}
+	mono/bridge.h
+	mono/runtime.h
+)
+
+foreach(thing ${coreclr_shared_sources})
+	list(APPEND coreclr_export_sources
+		"$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/${thing}>"
+		"$<INSTALL_INTERFACE:include/csharpify/${thing}>"
+	)
+endforeach()
+
+foreach(thing ${mono_shared_sources})
+	list(APPEND mono_export_sources
+		"$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/${thing}>"
+		"$<INSTALL_INTERFACE:include/csharpify/${thing}>"
+	)
+endforeach()
+
+target_sources(csharpify_coreclr INTERFACE ${coreclr_export_sources})
+target_sources(csharpify_mono INTERFACE ${mono_export_sources})
 
 if(RUNTIME_CORECLR)
 	target_sources(csharpify
@@ -104,7 +150,6 @@ if(RUNTIME_CORECLR)
 		BASE_DIRS coreclr
 		FILES
 		coreclr/bridge.h
-		coreclr/coreclrhost.h
 		coreclr/runtime.h
 	)
 else(RUNTIME_MONO)
@@ -113,16 +158,9 @@ else(RUNTIME_MONO)
 		BASE_DIRS mono
 		FILES
 		mono/bridge.h
+		mono/runtime.h
 	)
 endif()
-
-message(STATUS "DOTNET_INCLUDE_DIRS: ${DOTNET_INCLUDE_DIRS}")
-message(STATUS "generated_INCLUDE_DIR: ${generated_INCLUDE_DIR} ")
-message(STATUS "SDL2_INCLUDE_DIRS: ${SDL2_INCLUDE_DIRS}")
-message(STATUS "Vulkan_INCLUDE_DIRS: ${Vulkan_INCLUDE_DIRS}")
-message(STATUS "IMGUI_DIR: ${IMGUI_DIR}")
-message(STATUS "IMGUI_DIR/backends: ${IMGUI_DIR}/backends")
-message(STATUS "NETHOST: ${NETHOST}")
 
 target_include_directories(csharpify PRIVATE
 	${DOTNET_INCLUDE_DIRS}
@@ -202,8 +240,6 @@ endforeach()
 
 list(APPEND bundle_outputs "${CMAKE_BINARY_DIR}/bin/${CSHARPIFY_FILE}")
 
-message(STATUS "outputs ${build_outputs}")
-
 add_custom_command(
 	OUTPUT  ${bundle_outputs}
 	COMMAND ${CMAKE_COMMAND} -E copy -t "${CMAKE_BINARY_DIR}/bin/" "$<TARGET_FILE:csharpify>" ${build_outputs}
@@ -222,9 +258,11 @@ if(DOTNET_PLATFORM STREQUAL "win")
 endif()
 
 
-add_custom_target(csharpify_native_bundled ALL DEPENDS ${bundle_outputs} ${bundle_symbols})
+add_custom_target(csharpify_native_bundled DEPENDS ${bundle_outputs} ${bundle_symbols})
 
 add_custom_target(run
 	COMMAND "${CMAKE_BINARY_DIR}/bin/${CSHARPIFY_FILE}"
 	DEPENDS "${CMAKE_BINARY_DIR}/bin/${CSHARPIFY_FILE}"
 )
+
+add_custom_target(program DEPENDS csharpify_managed_bundled csharpify_native_bundled)

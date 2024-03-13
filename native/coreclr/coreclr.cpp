@@ -1,8 +1,8 @@
 #include "config.h"
-
-#if RUNTIME_CORECLR
-
 #include "common.h"
+
+#if RUNTIME_CORECLR && !PLATFORM_WIN
+
 #include "managed_exports.h"
 #include "bridge.h"
 #include "utils.h"

@@ -5,29 +5,11 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
-#endif
-
-
-// #include "cimgui.h"
-
-// ImGuiContext *ctx;
-// ImGuiMemAllocFunc alloc_func = nullptr;
-// ImGuiMemFreeFunc free_func   = nullptr;
-// void* user_data              = nullptr;
 
 void MainLoop()
 {
-//    ctx = ImGui::GetCurrentContext();
-//    ImGui::GetAllocatorFunctions(&alloc_func, &free_func, &user_data);
-
     OnUpdate();
 }
-
-//static int (DNNE_CALLTYPE* CallingBackToNativeLand_ptr)(int);
 
 DNNE_EXTERN_C
 int CallingBackToNativeLand(int number)

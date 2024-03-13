@@ -534,3 +534,4 @@ src/net8.0
 generated/
 log
 .dotnet/
+install/

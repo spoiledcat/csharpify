@@ -70,5 +70,5 @@ if(NOT(DOTNET_PLATFORM STREQUAL "win" AND DOTNET_RUNTIME STREQUAL "coreclr"))
 list(APPEND sdk copy_sdk)
 endif()
 
-add_custom_target(csharpify_managed ALL DEPENDS "${dotnet_publish_dir}/managed.dll" "${dotnet_sc_dir}/managed.dll" "${bin_dir}/managed.dll")
-add_custom_target(csharpify_managed_bundled ALL DEPENDS ${sdk})
+add_custom_target(csharpify_managed DEPENDS "${dotnet_publish_dir}/managed.dll" "${dotnet_sc_dir}/managed.dll" "${bin_dir}/managed.dll")
+add_custom_target(csharpify_managed_bundled DEPENDS ${sdk})

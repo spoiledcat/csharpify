@@ -35,6 +35,6 @@ else()
   )
 endif()
 
-if(NOT ret EQUAL 0 AND NOT(PATCHERR MATCHES "Skipping patch"))
+if(NOT ret EQUAL 0 AND NOT(PATCHERR MATCHES "Skipping patch") AND NOT(PATCHERR MATCHES "previously applied"))
   message(FATAL_ERROR "Failed to apply patch ${patch_file} to ${in_file} with ${PATCH}")
 endif()

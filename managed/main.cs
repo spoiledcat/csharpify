@@ -42,7 +42,6 @@ public class Program {
 	   ImGui.ShowDemoWindow();
     }
 
-
     [DllImport("__Internal")]
     public static unsafe extern byte igBegin(byte* name, byte* p_open, ImGuiWindowFlags flags);
 
