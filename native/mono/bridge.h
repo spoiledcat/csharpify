@@ -10,10 +10,10 @@
 #include "runtime.h"
 
 static MonoCoreRuntimeProperties monovm_core_properties = {
-	nullptr,
-	nullptr,
-	nullptr,
-	nullptr
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr
 };
 
 #endif

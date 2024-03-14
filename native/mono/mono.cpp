@@ -7,27 +7,25 @@
 #include "bridge.h"
 #include "utils.h"
 
-#include <mono/metadata/class.h>
-#include <mono/metadata/reflection.h>
 #include <mono/metadata/mono-debug.h>
 #include <mono/metadata/assembly.h>
 #include <mono/jit/jit.h>
-#include <mono/metadata/object.h>
 #include <mono/utils/mono-error.h>
 
 #include <filesystem>
 #include <cassert>
 #include <dlfcn.h>
 
-namespace fs = std::filesystem; 
+namespace fs = std::filesystem;
 
 static MonoAssembly* entry_assembly = NULL;
 
+static MonoAssembly* entry_assembly = nullptr;
+
 MonoAssembly*
-assembly_preload_hook (MonoAssemblyName *aname, char **assemblies_path, void* user_data)
-{
-    char filename [1024];
-    char path [1024];
+assembly_preload_hook(MonoAssemblyName* aname, char** assemblies_path, void* user_data) {
+    char filename[1024];
+    char path[1024];
 
     fs::path name(mono_assembly_name_get_name(aname));
     if (!name.has_extension() || name.extension() != "dll") {
@@ -50,8 +48,7 @@ assembly_preload_hook (MonoAssemblyName *aname, char **assemblies_path, void* us
     return nullptr;
 }
 
-static void* load_symbol(void* handle, const std::string& name)
-{
+static void* load_symbol(void* handle, const std::string &name) {
     assert(!name.empty());
 
     void* ret;
@@ -65,79 +62,76 @@ static void* load_symbol(void* handle, const std::string& name)
 }
 
 CSHARPIFY_BEGIN_C
-void* pinvoke_override (const char *libraryName, const char *entrypointName)
-{
-	void* symbol = nullptr;
-	if (!strcmp(libraryName, "__Internal") ||
-		!strcmp(libraryName, "cimgui")) {
-		symbol = load_symbol(nullptr, entrypointName);
-	}
-	return symbol;
+void* pinvoke_override(const char* libraryName, const char* entrypointName) {
+    void* symbol = nullptr;
+    if (!strcmp(libraryName, "__Internal") ||
+        !strcmp(libraryName, "cimgui")) {
+        symbol = load_symbol(nullptr, entrypointName);
+    }
+    return symbol;
 }
 CSHARPIFY_END_C
 
 
-char *strdup_printf (int* len, const char *msg, ...)
-{
-	// COOP: no managed memory access: any mode
-	va_list args;
-	char *formatted = NULL;
+char* strdup_printf(int* len, const char* msg, ...) {
+    // COOP: no managed memory access: any mode
+    va_list args;
+    char* formatted = NULL;
 
-	va_start (args, msg);
-	*len = vasprintf (&formatted, msg, args);
-	va_end (args);
+    va_start (args, msg);
+    *len = vasprintf(&formatted, msg, args);
+    va_end (args);
 
-	return formatted;
+    return formatted;
 }
 
-int load_managed_runtime()
-{
-	fs::path assemblyPath = ".";
-	auto assemblyName = ASSEMBLYNAME ".dll";
-	fs::path startAssembly = assemblyPath / assemblyName;
+int load_managed_runtime() {
+    fs::path assemblyPath = ".";
+    auto assemblyName = ASSEMBLYNAME ".dll";
+    fs::path startAssembly = assemblyPath / assemblyName;
 
-	auto basePath = normalizePath(".");
-	auto runtimePath = fs::path{normalizePath("sdk")};
+    auto basePath = normalizePath(".");
+    auto runtimePath = fs::path{normalizePath("sdk")};
 
-	const char *propertyKeys[] = {
+    const char* propertyKeys[] = {
             HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY, // path to where the managed assemblies are (usually at least - RID-specific assemblies will be in subfolders)
             HOST_PROPERTY_RUNTIME_IDENTIFIER
     };
 
-	const char *propertyValues[] = {
-		basePath.c_str(),
-		runtime_identifier
-	};
+    const char* propertyValues[] = {
+            basePath.c_str(),
+            runtime_identifier
+    };
 
     monovm_core_properties.pinvoke_override = &pinvoke_override;
 
-	int rv = monovm_initialize_preparsed (
-		&monovm_core_properties,
-        sizeof(propertyKeys) / sizeof(char*),
-		propertyKeys,
-		propertyValues
-	);
+    int rv = monovm_initialize_preparsed(
+            &monovm_core_properties,
+            sizeof(propertyKeys) / sizeof(char*),
+            propertyKeys,
+            propertyValues
+    );
 
-    MonovmRuntimeConfigArguments  runtime_config_args;
+    MonovmRuntimeConfigArguments runtime_config_args;
 
     mono_debug_init(MONO_DEBUG_FORMAT_MONO);
-    mono_install_assembly_preload_hook (assembly_preload_hook, nullptr);
+    mono_install_assembly_preload_hook(assembly_preload_hook, nullptr);
 
     mono_set_signal_chaining(1);
     mono_set_crash_chaining(1);
     mono_jit_init(ASSEMBLYNAME);
 
     // The mono initialization resets the preload hooks, so install it again
-    mono_install_assembly_preload_hook (assembly_preload_hook, nullptr);
+    mono_install_assembly_preload_hook(assembly_preload_hook, nullptr);
 
-	MonoImageOpenStatus status = MONO_IMAGE_OK;
-	entry_assembly = mono_assembly_open(assemblyName, &status);
+    MonoImageOpenStatus status = MONO_IMAGE_OK;
+    entry_assembly = mono_assembly_open(assemblyName, &status);
     return rv;
 }
 
 #include <mono/metadata/loader.h>
-int register_icall(const char* name, const void* fnptr)
-{
+
+int register_icall(const char* name, const void* fnptr) {
     mono_add_internal_call(name, fnptr);
 }
 
@@ -145,18 +139,20 @@ int register_icall(const char* name, const void* fnptr)
 extern "C" {
 #endif
 
-MonoMethod *
-mono_marshal_get_managed_wrapper(MonoMethod *method, MonoClass *delegate_klass, MonoGCHandle target_handle, MonoError *error);
+MonoMethod*
+mono_marshal_get_managed_wrapper(MonoMethod* method, MonoClass* delegate_klass, MonoGCHandle target_handle,
+                                 MonoError* error);
 void*
-mono_compile_method_checked(MonoMethod *method, MonoError *error);
+mono_compile_method_checked(MonoMethod* method, MonoError* error);
 #define is_ok(error) ((error).error_code == MONO_ERROR_NONE)
 void*
-ves_icall_RuntimeMethodHandle_GetFunctionPointer_raw(MonoMethod *method, MonoError *error);
+ves_icall_RuntimeMethodHandle_GetFunctionPointer_raw(MonoMethod* method, MonoError* error);
 
 void* get_fast_callable_managed_function(
-   const char_t* dotnet_type,
-   const char_t* dotnet_type_method)
+        const char_t* dotnet_type,
+        const char_t* dotnet_type_method) {
 {
+
     std::string nmspace;
     std::string type;
     std::string typeAndNamespace;

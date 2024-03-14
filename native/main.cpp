@@ -6,20 +6,19 @@
 #include "imgui_internal.h"
 
 
-void MainLoop()
-{
+void MainLoop() {
     OnUpdate();
 }
 
 DNNE_EXTERN_C
-int CallingBackToNativeLand(int number)
-{
-    return number+1;
+int CallingBackToNativeLand(int number) {
+    return number + 1;
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
+
 	load_managed_runtime();
+
 //    CallingBackToNativeLand_ptr = CallingBackToNativeLand;
 //    register_icall("Program::CallingBackToNativeLand", (const void*)CallingBackToNativeLand_ptr);
 
@@ -27,12 +26,13 @@ int main(int argc, char** argv)
     //while( !::IsDebuggerPresent() )
     //::Sleep( 100 );
 
-	OnStart();
+    OnStart();
+
     auto data = new NativeData{42};
     //DeepClassNameCall(data);
 
     SomeCall(*data);
 
-	return imgui_main(argc, argv);
+    return imgui_main(argc, argv);
 }
 

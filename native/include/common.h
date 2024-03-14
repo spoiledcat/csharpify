@@ -1,7 +1,7 @@
 #ifndef CSHARPIFY_COMMON_H
 #define CSHARPIFY_COMMON_H
 
-#if defined(_MSC_VER) && !defined(__clang__)  && !defined(__INTEL_COMPILER)
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
 #   define COMPILER_MSVC 1
 #elif defined(__clang)
 #   define COMPILER_CLANG 1
@@ -25,7 +25,9 @@
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64) || defined(__CYGWIN32__)
 #   define PLATFORM_WIN 1
 #elif defined(__MACH__) || defined(__APPLE__)
+
 #   include <TargetConditionals.h>
+
 #if TARGET_OS_OSX == 1
 #   define PLATFORM_MAC 1
 #else
