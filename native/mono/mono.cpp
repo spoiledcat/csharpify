@@ -1,4 +1,5 @@
 #include "config.h"
+#include "common.h"
 
 #if RUNTIME_MONO
 
@@ -15,28 +16,12 @@
 #include <mono/utils/mono-error.h>
 
 #include <filesystem>
+#include <cassert>
+#include <dlfcn.h>
+
 namespace fs = std::filesystem; 
 
 static MonoAssembly* entry_assembly = NULL;
-
-constexpr static char RUNTIME_IDENTIFIER_KEY[] = "RUNTIME_IDENTIFIER";
-constexpr static size_t RUNTIME_IDENTIFIER_INDEX = 0;
-
-constexpr static char APP_CONTEXT_BASE_DIRECTORY_KEY[] = "APP_CONTEXT_BASE_DIRECTORY";
-constexpr static size_t APP_CONTEXT_BASE_DIRECTORY_INDEX = 1;
-
-constexpr static size_t PROPERTY_COUNT = 2;
-
-using property_array = const char*[PROPERTY_COUNT];
-static property_array _property_keys {
-	RUNTIME_IDENTIFIER_KEY,
-	APP_CONTEXT_BASE_DIRECTORY_KEY,
-};
-
-static property_array _property_values  {
-	runtime_identifier,
-	nullptr,
-};
 
 MonoAssembly*
 assembly_preload_hook (MonoAssemblyName *aname, char **assemblies_path, void* user_data)
@@ -65,6 +50,46 @@ assembly_preload_hook (MonoAssemblyName *aname, char **assemblies_path, void* us
     return nullptr;
 }
 
+static void* load_symbol(void* handle, const std::string& name)
+{
+    assert(!name.empty());
+
+    void* ret;
+    if (!handle) {
+        ret = dlsym(RTLD_SELF, name.c_str());
+    } else {
+        ret = dlsym(handle, name.c_str());
+    }
+    assert(ret != nullptr);
+    return ret;
+}
+
+CSHARPIFY_BEGIN_C
+ void* pinvoke_override (const char *libraryName, const char *entrypointName)
+ {
+ 	void* symbol = nullptr;
+ 	if (!strcmp(libraryName, "__Internal") ||
+ 		!strcmp(libraryName, "cimgui")) {
+ 		symbol = load_symbol(nullptr, entrypointName);
+ 	}
+ 	return symbol;
+ }
+ CSHARPIFY_END_C
+
+
+char *strdup_printf (int* len, const char *msg, ...)
+{
+	// COOP: no managed memory access: any mode
+	va_list args;
+	char *formatted = NULL;
+
+	va_start (args, msg);
+	*len = vasprintf (&formatted, msg, args);
+	va_end (args);
+
+	return formatted;
+}
+
 int load_managed_runtime()
 {
 	fs::path assemblyPath = ".";
@@ -73,14 +98,27 @@ int load_managed_runtime()
 
 	auto basePath = normalizePath(".");
 	auto runtimePath = fs::path{normalizePath("sdk")};
-	
-	_property_values[APP_CONTEXT_BASE_DIRECTORY_INDEX] = runtimePath.c_str();
+
+    int len;
+	char *pinvoke_override_ptr = strdup_printf (&len, "%p", &pinvoke_override);
+
+	const char *propertyKeys[] = {
+            HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY, // path to where the managed assemblies are (usually at least - RID-specific assemblies will be in subfolders)
+            HOST_PROPERTY_RUNTIME_IDENTIFIER,
+            HOST_PROPERTY_PINVOKE_OVERRIDE
+    };
+
+	const char *propertyValues[] = {
+		basePath.c_str(),
+		runtime_identifier,
+        pinvoke_override_ptr,
+	};
 
 	int rv = monovm_initialize_preparsed (
 		&monovm_core_properties,
-        PROPERTY_COUNT,
-		const_cast<const char**>(_property_keys),
-		const_cast<const char**>(_property_values)
+        sizeof(propertyKeys) / sizeof(char*),
+		propertyKeys,
+		propertyValues
 	);
 
     MonovmRuntimeConfigArguments  runtime_config_args;

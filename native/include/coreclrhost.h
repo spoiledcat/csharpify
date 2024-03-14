@@ -8,6 +8,8 @@
 #ifndef __CORECLR_HOST_H__
 #define __CORECLR_HOST_H__
 
+#include "common.h"
+
 #if defined(_WIN32) && defined(_M_IX86)
 #define CORECLR_CALLING_CONVENTION __stdcall
 #else
@@ -127,7 +129,21 @@ CORECLR_HOSTING_API(coreclr_execute_assembly,
 // Callback types used by the hosts
 //
 typedef bool(CORECLR_CALLING_CONVENTION BundleProbeFn)(const char* path, int64_t* offset, int64_t* size);
-typedef const void* (CORECLR_CALLING_CONVENTION PInvokeOverrideFn)(const char* libraryName, const char* entrypointName);
 
+#if !RUNTIME_MONO
+typedef const void* (CORECLR_CALLING_CONVENTION PInvokeOverrideFn)(const char* libraryName, const char* entrypointName);
+#endif
+
+#define HOST_PROPERTY_RUNTIME_CONTRACT CSH_STR("HOST_RUNTIME_CONTRACT")
+#define HOST_PROPERTY_APP_PATHS CSH_STR("APP_PATHS")
+#define HOST_PROPERTY_BUNDLE_PROBE CSH_STR("BUNDLE_PROBE")
+#define HOST_PROPERTY_ENTRY_ASSEMBLY_NAME CSH_STR("ENTRY_ASSEMBLY_NAME")
+#define HOST_PROPERTY_HOSTPOLICY_EMBEDDED CSH_STR("HOSTPOLICY_EMBEDDED")
+#define HOST_PROPERTY_NATIVE_DLL_SEARCH_DIRECTORIES CSH_STR("NATIVE_DLL_SEARCH_DIRECTORIES")
+#define HOST_PROPERTY_PINVOKE_OVERRIDE CSH_STR("PINVOKE_OVERRIDE")
+#define HOST_PROPERTY_PLATFORM_RESOURCE_ROOTS CSH_STR"PLATFORM_RESOURCE_ROOTS")
+#define HOST_PROPERTY_TRUSTED_PLATFORM_ASSEMBLIES CSH_STR("TRUSTED_PLATFORM_ASSEMBLIES")
+#define HOST_PROPERTY_RUNTIME_IDENTIFIER CSH_STR("RUNTIME_IDENTIFIER")
+#define HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY CSH_STR("APP_CONTEXT_BASE_DIRECTORY") // path to where the managed assemblies are (usually at least - RID-specific assemblies will be in subfolders)
 
 #endif // __CORECLR_HOST_H__

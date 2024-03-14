@@ -37,6 +37,7 @@ public class Program {
 	[UnmanagedCallersOnly()]
     private static void OnUpdate()
     {
+	   Console.WriteLine("Update");
 	   //  ImGui.Begin("Hello, world!");
 	   //  ImGui.End();
 	   ImGui.ShowDemoWindow();

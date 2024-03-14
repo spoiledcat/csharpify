@@ -74,4 +74,8 @@
 #   define CSH_STR(s) s
 #endif
 
+#define CSHARPIFY_BEGIN_C  extern "C" {
+#define CSHARPIFY_END_C    }
+
+
 #endif //CSHARPIFY_COMMON_H
