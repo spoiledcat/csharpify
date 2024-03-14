@@ -65,7 +65,9 @@ elseif(RUNTIME_NATIVEAOT)
 endif()
 
 add_dependencies(csharpify packages)
+
 add_dependencies(csharpify cimgui)
+
 target_link_libraries(csharpify $<TARGET_OBJECTS:cimgui>)
 
 if(BUILD_SDL2)
@@ -78,7 +80,7 @@ endif()
 
 list(APPEND headers_base_dirs
 	include
-	"${DOTNET_APPHOST_PATH}"
+	${SHARED_INCLUDE_DIRS}
 )
 
 list(APPEND headers_shared
@@ -87,7 +89,7 @@ list(APPEND headers_shared
 	include/managed_bridge.h
 	include/utils.h
 	include/coreclrhost.h
-	"${DOTNET_APPHOST_PATH}/coreclr_delegates.h"
+	${SHARED_HEADERS}
 )
 
 target_sources(csharpify

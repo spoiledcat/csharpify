@@ -6,7 +6,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(CSharpifyDefinitions)
 include(CSharpifyDotnet)
 
-add_subdirectory(dotnet-deps EXCLUDE_FROM_ALL)
+add_subdirectory(dotnet-deps)
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "")
 if(NOT CMAKE_BUILD_TYPE)
