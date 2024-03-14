@@ -66,14 +66,7 @@ endif()
 
 add_dependencies(csharpify packages)
 add_dependencies(csharpify cimgui)
-
-if(MSVC)
-	target_link_options(csharpify PRIVATE "/WHOLEARCHIVE:$<TARGET_FILE:cimgui>")
-else()
-  # gcc uses -Wl,--whole-archive instead of force_load
-	target_link_options(csharpify PRIVATE -Wl,-force_load "${cimgui_BINARY_DIR}/cimgui.a")
-endif()
-
+target_link_libraries(csharpify $<TARGET_OBJECTS:cimgui>)
 
 if(BUILD_SDL2)
 	target_link_libraries(csharpify SDL2-static)
@@ -212,8 +205,11 @@ endif()
 if(DOTNET_PLATFORM STREQUAL "osx")
 	target_link_libraries(csharpify
 		${IOKIT}
-		${CORECLR}
 	)
+endif()
+
+if(CORECLR)
+	target_link_libraries(csharpify ${CORECLR})
 endif()
 
 target_compile_definitions(csharpify PRIVATE DNNE_COMPILE_AS_SOURCE DNNE_SELF_CONTAINED_RUNTIME)

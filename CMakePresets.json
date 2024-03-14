@@ -27,10 +27,6 @@
         "DOTNET_RUNTIME": {
           "type": "STRING",
           "value": "mono"
-        },
-        "IMGUI_STATIC": {
-          "type": "BOOL",
-          "value": "TRUE"
         }
       }
 	 },

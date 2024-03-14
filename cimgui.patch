@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 5012db3..17ecb5b 100644
+index 5012db3..34d2141 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -4,7 +4,7 @@ project(cimgui)
@@ -22,7 +22,16 @@ index 5012db3..17ecb5b 100644
  if(IMGUI_FREETYPE)
  	FIND_PACKAGE(freetype REQUIRED PATHS ${FREETYPE_PATH})
  	list(APPEND IMGUI_LIBRARIES freetype)
-@@ -47,17 +51,19 @@ else (WIN32)
+@@ -35,6 +39,8 @@ endif(IMGUI_FREETYPE)
+ #add library and link
+ if (IMGUI_STATIC)
+     add_library(cimgui STATIC ${IMGUI_SOURCES})
++elseif(IMGUI_OBJECT)
++    add_library(cimgui OBJECT ${IMGUI_SOURCES})
+ else (IMGUI_STATIC)
+     add_library(cimgui SHARED ${IMGUI_SOURCES})
+ endif (IMGUI_STATIC)
+@@ -47,8 +53,8 @@ else (WIN32)
      target_compile_definitions(cimgui PUBLIC IMGUI_IMPL_API=extern\t\"C\"\t)
  endif (WIN32)
  
@@ -33,14 +42,3 @@ index 5012db3..17ecb5b 100644
  set_target_properties(cimgui PROPERTIES PREFIX "")
  target_link_libraries(cimgui ${IMGUI_LIBRARIES})
  
- #install
-+if (CIMGUI_INSTALL)
- install(TARGETS cimgui
-     RUNTIME DESTINATION  .
-     LIBRARY DESTINATION  .
-     ARCHIVE DESTINATION  .
- )
-+endif()
- 
- #test
- set(CIMGUI_TEST "no" CACHE STRING "Enable compilation of a test unit based on imgui null")

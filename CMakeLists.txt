@@ -86,7 +86,8 @@ execute_process(
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/PatchFile.cmake
 )
 
-set(IMGUI_STATIC 1)
+set(IMGUI_STATIC 0 CACHE BOOL "" FORCE)
+set(IMGUI_OBJECT 1 CACHE BOOL "" FORCE)
 
 add_subdirectory(managed)
 add_subdirectory(cimgui)
