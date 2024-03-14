@@ -65,16 +65,16 @@ static void* load_symbol(void* handle, const std::string& name)
 }
 
 CSHARPIFY_BEGIN_C
- void* pinvoke_override (const char *libraryName, const char *entrypointName)
- {
- 	void* symbol = nullptr;
- 	if (!strcmp(libraryName, "__Internal") ||
- 		!strcmp(libraryName, "cimgui")) {
- 		symbol = load_symbol(nullptr, entrypointName);
- 	}
- 	return symbol;
- }
- CSHARPIFY_END_C
+void* pinvoke_override (const char *libraryName, const char *entrypointName)
+{
+	void* symbol = nullptr;
+	if (!strcmp(libraryName, "__Internal") ||
+		!strcmp(libraryName, "cimgui")) {
+		symbol = load_symbol(nullptr, entrypointName);
+	}
+	return symbol;
+}
+CSHARPIFY_END_C
 
 
 char *strdup_printf (int* len, const char *msg, ...)
@@ -99,20 +99,17 @@ int load_managed_runtime()
 	auto basePath = normalizePath(".");
 	auto runtimePath = fs::path{normalizePath("sdk")};
 
-    int len;
-	char *pinvoke_override_ptr = strdup_printf (&len, "%p", &pinvoke_override);
-
 	const char *propertyKeys[] = {
             HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY, // path to where the managed assemblies are (usually at least - RID-specific assemblies will be in subfolders)
-            HOST_PROPERTY_RUNTIME_IDENTIFIER,
-            HOST_PROPERTY_PINVOKE_OVERRIDE
+            HOST_PROPERTY_RUNTIME_IDENTIFIER
     };
 
 	const char *propertyValues[] = {
 		basePath.c_str(),
-		runtime_identifier,
-        pinvoke_override_ptr,
+		runtime_identifier
 	};
+
+    monovm_core_properties.pinvoke_override = &pinvoke_override;
 
 	int rv = monovm_initialize_preparsed (
 		&monovm_core_properties,
