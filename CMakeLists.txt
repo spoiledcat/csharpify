@@ -15,10 +15,6 @@ endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-set(RID "${DOTNET_PLATFORM}-${DOTNET_ARCH}" CACHE STRING ".NET Runtime Identifier" FORCE)
-message(STATUS ".NET RID: ${RID}")
-message(STATUS ".NET Runtime: ${DOTNET_RUNTIME}")
-
 if(DOTNET_PLATFORM STREQUAL "osx")
   find_library(IOKIT IOKit)
   find_library(COCOA Cocoa)

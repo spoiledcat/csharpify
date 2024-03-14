@@ -212,7 +212,7 @@ endif()
 if(DOTNET_PLATFORM STREQUAL "osx")
 	target_link_libraries(csharpify
 		${IOKIT}
-		${DOTNET_LIBS}
+		${CORECLR}
 	)
 endif()
 

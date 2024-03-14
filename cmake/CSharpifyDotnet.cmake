@@ -28,6 +28,8 @@ message(STATUS ".NET Version:${DOTNET_MAJOR}.${DOTNET_MINOR}.${DOTNET_PATCH}")
 
 cmake_path(APPEND CMAKE_SOURCE_DIR ".packages" OUTPUT_VARIABLE DOTNET_PACKAGES_PATH)
 
+set(RID "${DOTNET_PLATFORM}-${DOTNET_ARCH}" CACHE STRING ".NET Runtime Identifier" FORCE)
+
 # this is useful on all platforms for the coreclr definitions
 set(DOTNET_APPHOST_PATH
   "${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.host.win-x64/${DOTNET_SDK_VERSION}/runtimes/win-x64/native"
@@ -55,6 +57,11 @@ if(RUNTIME_MONO)
   list(APPEND DOTNET_INCLUDE_DIRS "${DOTNET_LIBRARY_PATH}/include/mono-2.0/")
 endif()
 
+
+message(STATUS ".NET RID: ${RID}")
+message(STATUS ".NET Runtime: ${DOTNET_RUNTIME}")
+message(STATUS ".NET SDK: ${DOTNET_SDK_PATH_ROOT}")
+
 unset(CORECLR CACHE)
 
 if(RUNTIME_CORECLR AND (NOT DOTNET_PLATFORM STREQUAL "win"))
@@ -62,3 +69,4 @@ if(RUNTIME_CORECLR AND (NOT DOTNET_PLATFORM STREQUAL "win"))
 elseif(RUNTIME_MONO)
   find_library(CORECLR coreclr PATHS "${DOTNET_LIBRARY_PATH}")
 endif()
+

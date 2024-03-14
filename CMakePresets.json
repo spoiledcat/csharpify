@@ -22,7 +22,7 @@
       "name": "mono",
       "displayName": "Mono",
       "description": "Build with Mono",
-      "binaryDir": "${sourceDir}/build/mono2",
+      "binaryDir": "${sourceDir}/build/mono",
       "cacheVariables": {
         "DOTNET_RUNTIME": {
           "type": "STRING",
