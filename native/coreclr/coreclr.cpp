@@ -15,7 +15,7 @@
 
 namespace fs = std::filesystem;
 
-void *coreclr_handle = NULL;
+static bool initialized;
 
 static void* coreclr_handle = nullptr;
 static unsigned int coreclr_domainId = 0;
@@ -111,6 +111,7 @@ int load_managed_runtime() {
             &coreclr_domainId
     );
 
+    initialized = true;
     return rv;
 }
 
@@ -119,6 +120,10 @@ CSHARPIFY_BEGIN_C
 void* get_fast_callable_managed_function(
         const char_t* dotnet_type,
         const char_t* dotnet_type_method) {
+
+    if (!initialized) {
+        load_managed_runtime();
+    }
 
     std::string typeAndAssembly{dotnet_type};
     auto pos = typeAndAssembly.find(", ");

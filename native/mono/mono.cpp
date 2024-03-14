@@ -18,7 +18,7 @@
 
 namespace fs = std::filesystem;
 
-static MonoAssembly* entry_assembly = NULL;
+static bool initialized;
 
 static MonoAssembly* entry_assembly = nullptr;
 
@@ -126,6 +126,7 @@ int load_managed_runtime() {
 
     MonoImageOpenStatus status = MONO_IMAGE_OK;
     entry_assembly = mono_assembly_open(assemblyName, &status);
+    initialized = true;
     return rv;
 }
 
@@ -151,7 +152,10 @@ ves_icall_RuntimeMethodHandle_GetFunctionPointer_raw(MonoMethod* method, MonoErr
 void* get_fast_callable_managed_function(
         const char_t* dotnet_type,
         const char_t* dotnet_type_method) {
-{
+
+    if (!initialized) {
+        load_managed_runtime();
+    }
 
     std::string nmspace;
     std::string type;

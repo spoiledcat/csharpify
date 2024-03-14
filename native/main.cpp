@@ -17,7 +17,9 @@ int CallingBackToNativeLand(int number) {
 
 int main(int argc, char** argv) {
 
-	load_managed_runtime();
+    // the first call to a managed function will initialize the runtime, but it can also be initialized
+    // ahead of time
+    // load_managed_runtime();
 
 //    CallingBackToNativeLand_ptr = CallingBackToNativeLand;
 //    register_icall("Program::CallingBackToNativeLand", (const void*)CallingBackToNativeLand_ptr);
