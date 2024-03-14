@@ -77,8 +77,6 @@ else()
   set(Vulkan_MoltenVK_LIBRARY "")
 endif()
 
-set(IMGUI_STATIC 1)
-
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     message(STATUS "CMAKE_INSTALL_PREFIX is not set. Default value is '${CMAKE_INSTALL_PREFIX}', will set it to ${CMAKE_SOURCE_DIR}/install")
     set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "Where the library will be installed to" FORCE)
@@ -91,6 +89,8 @@ execute_process(
     -Dpatch_file:FILEPATH=${CMAKE_CURRENT_SOURCE_DIR}/cimgui.patch
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/PatchFile.cmake
 )
+
+set(IMGUI_STATIC 1)
 
 add_subdirectory(managed)
 add_subdirectory(cimgui)
