@@ -7,13 +7,16 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <EnableDynamicLoading>true</EnableDynamicLoading>
+
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)/SourceGenerated</CompilerGeneratedFilesOutputPath>
   </PropertyGroup>
 
-  <!-- <ItemGroup>
+  <ItemGroup>
     <DirectPInvoke Include="__Internal" />
     <DirectPInvoke Include="$(TargetName)" />
     <DirectPInvoke Include="cimgui" />
-  </ItemGroup> -->
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="SDL2-CS" Version="[2.0.30]" />

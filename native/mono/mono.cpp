@@ -134,11 +134,10 @@ int load_managed_runtime() {
 
 int register_icall(const char* name, const void* fnptr) {
     mono_add_internal_call(name, fnptr);
+	return 0;
 }
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+CSHARPIFY_BEGIN_C
 
 MonoMethod*
 mono_marshal_get_managed_wrapper(MonoMethod* method, MonoClass* delegate_klass, MonoGCHandle target_handle,
@@ -192,8 +191,6 @@ void* get_fast_callable_managed_function(
     return ptr;
 }
 
-#ifdef __cplusplus
-}
-#endif
+CSHARPIFY_END_C
 
 #endif

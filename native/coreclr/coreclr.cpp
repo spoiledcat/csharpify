@@ -2,10 +2,10 @@
 #include "common.h"
 
 #if RUNTIME_CORECLR && !PLATFORM_WIN
+#include "utils.h"
 
 #include "managed_exports.h"
 #include "bridge.h"
-#include "utils.h"
 
 #include <filesystem>
 #include <cassert>
@@ -114,7 +114,6 @@ int load_managed_runtime() {
     initialized = true;
     return rv;
 }
-
 
 CSHARPIFY_BEGIN_C
 void* get_fast_callable_managed_function(
