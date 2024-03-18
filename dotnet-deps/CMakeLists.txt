@@ -6,6 +6,11 @@ execute_process(
 	WORKING_DIRECTORY "${packages_SOURCE_DIR}"
 )
 
+set(DOTNET_APPHOST_PATH
+  "${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.host.win-x64/${DOTNET_SDK_VERSION}/runtimes/win-x64/native"
+  CACHE STRING ".NET App Host" FORCE
+)
+
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/include")
 configure_file("${DOTNET_APPHOST_PATH}/coreclr_delegates.h" "${CMAKE_BINARY_DIR}/include/coreclr_delegates.h")
 

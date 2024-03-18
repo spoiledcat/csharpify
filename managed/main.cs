@@ -1,66 +1,43 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 using System.Text;
 using ImGuiNET;
 using SDL2;
 
 public partial class Program {
 
-	ref struct RefData {
-		public byte IsValid;
-	}
-
 	[UnmanagedCallersOnly()]
 	private static void OnStart() {
-		Console.WriteLine("hello");
-
-		send_utf16("A UTF16 string?");
-		send_utf8("A UTF8 string?");
+		var ret = CallToNative();
+		Console.WriteLine($"OnStart: {ret}");
 	}
 
-	[UnmanagedCallersOnly()]
-    private static void OnUpdate()
-    {
-	   ImGui.ShowDemoWindow();
-    }
-
-    //[MethodImpl(MethodImplOptions.InternalCall)]
-    [DllImport ("__Internal")]
-    internal static extern int CallingBackToNativeLand(int number);
 
 	[UnmanagedCallersOnly()]
-	static void ValidateData(RefData data){ 
-
-	}
-
-	[LibraryImport("__Internal", StringMarshalling = StringMarshalling.Utf16)]
-	internal static partial void send_utf16(string str);
-
-
-	[LibraryImport("__Internal", StringMarshalling = StringMarshalling.Utf8)]
-	internal static partial void send_utf8(string str);
-}
-
-
-namespace Something.Other {
-
-	[StructLayout(LayoutKind.Sequential)]
-	public struct NativeData
+	private static void OnUpdate()
 	{
-		public int intField;
+		ImGui.ShowDemoWindow();
 	}
 
-    public class NSClass1 {
 
-        [UnmanagedCallersOnly ()]
-        public static void SomeCall(NativeData data)
-        {
-            Console.WriteLine($"Initial value {data.intField}");
 
-            var ret = Program.CallingBackToNativeLand(data.intField);
 
-            Console.WriteLine($"Received {ret}");
-        }
-    }
+
+	/* Controlling how a bool gets marshalled */
+	[LibraryImport("__Internal")]
+	[return: MarshalUsing(typeof(BoolMarshaller))] internal static partial bool CallToNative();
+
+
+
+	[CustomMarshaller(typeof(bool), MarshalMode.Default, typeof(BoolMarshaller))]
+	internal static unsafe class BoolMarshaller
+	{
+		public static byte ConvertToUnmanaged(bool managed)
+		=> (byte)(managed ? 1 : 0);
+
+		public static bool ConvertToManaged(byte unmanaged)
+		=> unmanaged != 0;
+	}
 }

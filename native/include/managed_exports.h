@@ -7,8 +7,6 @@
 
 #include "exports.h"
 
-DNNE_EXTERN_C DNNE_API int DNNE_CALLTYPE CallingBackToNativeLand(int number);
-DNNE_EXTERN_C DNNE_API void DNNE_CALLTYPE send_utf16(uint16_t* str);
-DNNE_EXTERN_C DNNE_API void DNNE_CALLTYPE send_utf8(char* str);
+DNNE_EXTERN_C DNNE_API bool DNNE_CALLTYPE CallToNative();
 
 #endif // CSHARPIFY_MANAGED_EXPORTS_H_

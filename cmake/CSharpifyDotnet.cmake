@@ -62,11 +62,8 @@ message(STATUS ".NET RID: ${RID}")
 message(STATUS ".NET Runtime: ${DOTNET_RUNTIME}")
 message(STATUS ".NET SDK: ${DOTNET_SDK_PATH_ROOT}")
 
-unset(CORECLR CACHE)
-
 if(RUNTIME_CORECLR AND (NOT DOTNET_PLATFORM STREQUAL "win"))
   find_library(CORECLR coreclr PATHS "${DOTNET_LIBRARY_PATH}")
 elseif(RUNTIME_MONO)
   find_library(CORECLR coreclr PATHS "${DOTNET_LIBRARY_PATH}")
 endif()
-

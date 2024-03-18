@@ -4,28 +4,12 @@
 
 #include "managed_exports.h"
 #include "bridge.h"
+#include "main.h"
 
 
 void MainLoop() {
     OnUpdate();
 }
-
-DNNE_EXTERN_C
-int CallingBackToNativeLand(int number) {
-    return number + 1;
-}
-
-DNNE_EXTERN_C
-void send_utf16(uint16_t* str) {
-	std::u16string u16{(char16_t*)str};
-    auto ret = UnicodeToString(u16);
-	printf("%s\n", ret.c_str());
-}
-
-DNNE_EXTERN_C void send_utf8(char* str) {
-	printf("%s\n", str);
-}
-
 
 int main(int argc, char** argv) {
 
@@ -35,11 +19,12 @@ int main(int argc, char** argv) {
 
     OnStart();
 
-    // auto data = new NativeData{42};
-
-    // SomeCall(*data);
-
-    //return imgui_main(argc, argv);
-	return 0;
+    return imgui_main(argc, argv);
+	//return 0;
 }
 
+
+DNNE_EXTERN_C
+bool CallToNative() {
+    return true;
+}

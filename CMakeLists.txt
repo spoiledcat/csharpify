@@ -2,11 +2,12 @@ cmake_minimum_required(VERSION 3.26)
 project(csharpify)
 set(version 1.0.0)
 
+add_subdirectory(dotnet-deps)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(CSharpifyDefinitions)
 include(CSharpifyDotnet)
 
-add_subdirectory(dotnet-deps)
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "")
 if(NOT CMAKE_BUILD_TYPE)
