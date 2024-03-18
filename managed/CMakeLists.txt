@@ -55,7 +55,7 @@ add_custom_command(
 add_custom_target(managed_publish DEPENDS "${dotnet_publish_dir}/managed.dll" "${bin_dir}/managed.dll")
 
 add_custom_command(
-  OUTPUT "${dotnet_sc_dir}/managed.dll"
+  OUTPUT "${dotnet_sc_dir}/managed.dll" "${dotnet_sc_dir}/System.dll"
   COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} publish \"${CSPROJ}\" ${publish_args} --sc -r ${RID} --nologo -c $<CONFIG> -o \"${dotnet_sc_dir}\"  /p:UseMonoRuntime=$<IF:$<BOOL:${RUNTIME_MONO}>,true,false>
   DEPENDS "Directory.Build.props" "Directory.Build.targets" "main.cs" "managed.csproj"
 )
