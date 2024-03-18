@@ -51,6 +51,8 @@ will create an install directory with the isolated header and source files and c
 
 ### Example of how to include csharpify in another CMake project
 
+A demo project with the files configured as below is in https://github.com/spoiledcat/csharpify-demo
+
 Add a NuGet.config file to the root of your project, so that the .NET runtime libraries can be in a known location for linking.
 
 ```NuGet.config
