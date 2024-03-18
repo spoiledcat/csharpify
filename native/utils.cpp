@@ -7,12 +7,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <codecvt>
 
- std::string normalizePath(const std::string &messyPath)
- {
-    std::filesystem::path canonicalPath = std::filesystem::absolute(
-            std::filesystem::weakly_canonical(std::filesystem::path(messyPath)));
-    return canonicalPath.make_preferred().string();
-}
+std::string normalizePath(const std::string &messyPath)
 
 int parseManagedSignature(const std::string &full_type, std::string &assembly, std::string &typeAndNamespace,
                           std::string &nmspace, std::string &type) {

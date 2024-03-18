@@ -1,10 +1,10 @@
 find_program(DOTNET "dotnet")
 if ("${DOTNET}" STREQUAL "DOTNET-NOTFOUND")
-  message(FATAL_ERROR "dotnet could not be found!")
+	message(FATAL_ERROR "dotnet could not be found!")
 else()
-  execute_process(COMMAND "${DOTNET}" --version
-                  OUTPUT_VARIABLE DOTNET_VERSION
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+	execute_process(COMMAND "${DOTNET}" --version
+									OUTPUT_VARIABLE DOTNET_VERSION
+									OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
 
 set(ORIGINAL_PATH $ENV{PATH})
@@ -32,31 +32,38 @@ set(RID "${DOTNET_PLATFORM}-${DOTNET_ARCH}" CACHE STRING ".NET Runtime Identifie
 
 # this is useful on all platforms for the coreclr definitions
 set(DOTNET_APPHOST_PATH
-  "${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.host.win-x64/${DOTNET_SDK_VERSION}/runtimes/win-x64/native"
-  CACHE STRING ".NET App Host" FORCE
+	"${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.host.win-x64/${DOTNET_SDK_VERSION}/runtimes/win-x64/native"
+	CACHE STRING ".NET App Host" FORCE
 )
 
 set(DOTNET_SDK_PATH_ROOT
-  "${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.runtime.${runtimesuffix}${RID}/${DOTNET_SDK_VERSION}/runtimes/${RID}"
-  CACHE STRING ".NET SDK root" FORCE
+	"${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.runtime.${runtimesuffix}${RID}/${DOTNET_SDK_VERSION}/runtimes/${RID}"
+	CACHE STRING ".NET SDK root" FORCE
 )
 
 set(DOTNET_SDK_NUSPEC
-  "${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.runtime.${runtimesuffix}${RID}/${DOTNET_SDK_VERSION}/microsoft.netcore.app.runtime.${runtimesuffix}${RID}.nuspec"
-  CACHE STRING ".NET SDK nuspec marker" FORCE
+	"${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.runtime.${runtimesuffix}${RID}/${DOTNET_SDK_VERSION}/microsoft.netcore.app.runtime.${runtimesuffix}${RID}.nuspec"
+	CACHE STRING ".NET SDK nuspec marker" FORCE
 )
 
 set(DOTNET_SDK_PATH "${DOTNET_SDK_PATH_ROOT}/lib/net${DOTNET_MAJOR}.${DOTNET_MINOR}" CACHE STRING ".NET SDK path" FORCE)
 set(DOTNET_LIBRARY_PATH "${DOTNET_SDK_PATH_ROOT}/native" CACHE STRING ".NET lib path for linking" FORCE)
 
 if(NOT DOTNET_INCLUDE_DIRS)
-  set(DOTNET_INCLUDE_DIRS "")
+	set(DOTNET_INCLUDE_DIRS "")
 endif()
 
 if(RUNTIME_MONO)
-  list(APPEND DOTNET_INCLUDE_DIRS "${DOTNET_LIBRARY_PATH}/include/mono-2.0/")
+	list(APPEND DOTNET_INCLUDE_DIRS "${DOTNET_LIBRARY_PATH}/include/mono-2.0/")
 endif()
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+
+if(RUNTIME_CORECLR AND (NOT DOTNET_PLATFORM STREQUAL "win"))
+	find_library(CORECLR coreclr PATHS "${DOTNET_LIBRARY_PATH}")
+elseif(RUNTIME_MONO)
+	find_library(CORECLR coreclr PATHS "${DOTNET_LIBRARY_PATH}")
+endif()
 
 message(STATUS ".NET RID: ${RID}")
 message(STATUS ".NET Runtime: ${DOTNET_RUNTIME}")

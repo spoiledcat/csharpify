@@ -35,7 +35,6 @@ list(APPEND mono_shared_sources
 
 list(APPEND csharpify_sources
 	main.cpp
-	utils.cpp
 	${generated_INCLUDE_DIR}/exports.g.c
 	${PROJECT_BINARY_DIR}/imgui.gen.cpp
 	${IMGUI_DIR}/imgui.cpp

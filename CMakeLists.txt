@@ -8,11 +8,8 @@ include(CSharpifyDotnet)
 
 add_subdirectory(dotnet-deps)
 
-if(RUNTIME_CORECLR AND (NOT DOTNET_PLATFORM STREQUAL "win"))
-  find_library(CORECLR coreclr PATHS "${DOTNET_LIBRARY_PATH}")
-elseif(RUNTIME_MONO)
-  find_library(CORECLR coreclr PATHS "${DOTNET_LIBRARY_PATH}")
-endif()
+# Yes, this is included twice. It's on purpose, so it can finish setting up defined after the dotnet-deps restore is done.
+include(CSharpifyDotnet)
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "")
 if(NOT CMAKE_BUILD_TYPE)

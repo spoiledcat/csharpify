@@ -157,35 +157,19 @@ static void* load_symbol(void* handle, const std::string& name)
 extern "C" {
 #endif
 
-#ifdef _WIN32
-//void* get_fast_callable_managed_function(
-//    const char_t* dotnet_type,
-//    const char_t* dotnet_type_method)
-//{
-//	const std::wstring typeAndAssembly{dotnet_type};
-//	const size_t pos = typeAndAssembly.find(L", ");
-//	const std::wstring type = typeAndAssembly.substr(0, pos);
-//	const std::wstring assembly = typeAndAssembly.substr(pos + 2);
-//
-//	void *del = nullptr;
-//	int rv = coreclr_create_delegate (coreclr_handle, coreclr_domainId, UnicodeToString(assembly).c_str(), UnicodeToString(type).c_str(), UnicodeToString(dotnet_type_method).c_str(), &del);
-//	return del;
-//}
-#else
-void *get_fast_callable_managed_function(
-        const char_t *dotnet_type,
-        const char_t *dotnet_type_method) {
-    std::string typeAndAssembly{dotnet_type};
-    auto pos = typeAndAssembly.find(", ");
-    std::string type = typeAndAssembly.substr(0, pos);
-    std::string assembly = typeAndAssembly.substr(pos + 2);
+void* get_fast_callable_managed_function(
+   const char_t* dotnet_type,
+   const char_t* dotnet_type_method)
+{
+	const std::wstring typeAndAssembly{dotnet_type};
+	const size_t pos = typeAndAssembly.find(L", ");
+	const std::wstring type = typeAndAssembly.substr(0, pos);
+	const std::wstring assembly = typeAndAssembly.substr(pos + 2);
 
-    void *del = NULL;
-    int rv = coreclr_create_delegate(coreclr_handle, coreclr_domainId, assembly.c_str(), type.c_str(),
-                                     dotnet_type_method, &del);
-    return del;
+	void *del = nullptr;
+	int rv = coreclr_create_delegate (coreclr_handle, coreclr_domainId, UnicodeToString(assembly).c_str(), UnicodeToString(type).c_str(), UnicodeToString(dotnet_type_method).c_str(), &del);
+	return del;
 }
-#endif
 
 #ifdef __cplusplus
 }
