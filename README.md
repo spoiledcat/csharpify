@@ -6,6 +6,8 @@ This example initializes and runs [DearImGui](https://github.com/ocornut/imgui) 
 
 The C declarations and trampoline methods are generated using a slightly modified version of [DNNE](https://github.com/shana/DNNE), a prototype project that generates native exports for C#.
 
+**NOTE**: This is all still a work in progress! It's only been tested on mac and windows, and things might be broken often while the rest of the platforms and embedding modes are added.
+
 ## How to build
 
 Requirements:
