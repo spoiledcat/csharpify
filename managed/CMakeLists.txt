@@ -64,11 +64,13 @@ add_custom_target(managed_sc DEPENDS "${dotnet_sc_dir}/managed.dll")
 
 if(NOT(DOTNET_PLATFORM STREQUAL "win" AND DOTNET_RUNTIME STREQUAL "coreclr"))
   add_custom_target(copy_sdk
-    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${dotnet_sc_dir}" "${bin_dir}/sdk"
+    COMMAND ${CMAKE_COMMAND} -E create_symlink "${dotnet_sc_dir}" "${bin_dir}/sdk"
     DEPENDS "${dotnet_sc_dir}/System.dll"
   )
 list(APPEND sdk copy_sdk)
 endif()
 
-add_custom_target(csharpify_managed DEPENDS "${dotnet_publish_dir}/managed.dll" "${dotnet_sc_dir}/managed.dll" "${bin_dir}/managed.dll")
 add_custom_target(csharpify_managed_bundled DEPENDS ${sdk})
+add_custom_target(csharpify_managed DEPENDS "${dotnet_publish_dir}/managed.dll" "${dotnet_sc_dir}/managed.dll" "${bin_dir}/managed.dll")
+
+add_dependencies(csharpify_managed csharpify_managed_bundled)
