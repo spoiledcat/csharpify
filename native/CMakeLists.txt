@@ -6,6 +6,7 @@ set(CSHARPIFY_NAME "${CMAKE_EXECUTABLE_PREFIX}csharpify")
 set(CSHARPIFY_FILE "${CSHARPIFY_NAME}${CMAKE_EXECUTABLE_SUFFIX}")
 
 cmake_path(APPEND CMAKE_SOURCE_DIR "imgui" OUTPUT_VARIABLE IMGUI_DIR)
+cmake_path(APPEND CMAKE_SOURCE_DIR "cimgui" OUTPUT_VARIABLE CIMGUI_DIR)
 
 file(READ ${IMGUI_DIR}/examples/example_sdl2_vulkan/main.cpp IMGUI_GEN)
 string(LENGTH "${IMGUI_GEN}" IMGUI_GEN_LEN)
@@ -49,6 +50,7 @@ list(APPEND csharpify_sources
 	${IMGUI_DIR}/imgui_widgets.cpp
 	${IMGUI_DIR}/backends/imgui_impl_sdl2.cpp
 	${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
+	${CIMGUI_DIR}/cimgui.cpp
 )
 
 configure_file(config.h.in include/config.h)
@@ -66,10 +68,6 @@ elseif(RUNTIME_NATIVEAOT)
 endif()
 
 add_dependencies(csharpify packages)
-
-add_dependencies(csharpify cimgui)
-
-target_link_libraries(csharpify $<TARGET_OBJECTS:cimgui>)
 
 if(BUILD_SDL2)
 	target_link_libraries(csharpify SDL2-static)

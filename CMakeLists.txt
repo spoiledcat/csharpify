@@ -87,18 +87,11 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 
 file(MAKE_DIRECTORY packages)
-execute_process(
-  COMMAND ${CMAKE_COMMAND} 
-    -Din_file:FILEPATH=${CMAKE_CURRENT_SOURCE_DIR}/cimgui/CMakeLists.txt
-    -Dpatch_file:FILEPATH=${CMAKE_CURRENT_SOURCE_DIR}/cimgui.patch
-    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/PatchFile.cmake
-)
 
 set(IMGUI_STATIC 0 CACHE BOOL "" FORCE)
 set(IMGUI_OBJECT 1 CACHE BOOL "" FORCE)
 
 add_subdirectory(managed)
-add_subdirectory(cimgui)
 add_subdirectory(native)
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT csharpify)

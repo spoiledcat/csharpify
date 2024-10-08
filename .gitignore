@@ -535,3 +535,4 @@ generated/
 log
 .dotnet/
 install/
+managed/Directory.Build.props

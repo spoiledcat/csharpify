@@ -12,7 +12,6 @@ void MainLoop() {
 }
 
 int main(int argc, char** argv) {
-
     // the first call to a managed function will initialize the runtime, but it can also be initialized
     // ahead of time
     // load_managed_runtime();
@@ -20,7 +19,7 @@ int main(int argc, char** argv) {
     OnStart();
 
     return imgui_main(argc, argv);
-	//return 0;
+	return 0;
 }
 
 
