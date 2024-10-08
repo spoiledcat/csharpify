@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.26)
 project(csharpify)
 set(version 1.0.0)
 
+if(POLICY CMP0091)
+  cmake_policy(SET CMP0091 NEW) 
+endif()
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(CSharpifyDefinitions)
 include(CSharpifyDotnet)
@@ -24,8 +28,9 @@ if(DOTNET_PLATFORM STREQUAL "osx")
   find_library(COREVIDEO CoreVideo)
 elseif(DOTNET_PLATFORM STREQUAL "win")
   set(BUILD_SDL2 1)
-  # there are two libs, nethost.lib (dynamic) and libnethost.lib (static), and we want the static one
-  set(NETHOST "${DOTNET_APPHOST_PATH}/libnethost.lib")
+  # there are two libs, nethost.lib (dynamic) and libnethost.lib (static), and we want the dynamic one
+  # the static one forces a static release runtime on all subsequent links and that's annoying
+  set(NETHOST "${DOTNET_APPHOST_PATH}/nethost.lib")
 elseif(DOTNET_PLATFORM STREQUAL "linux")
 endif()
 
@@ -95,6 +100,8 @@ set(IMGUI_OBJECT 1 CACHE BOOL "" FORCE)
 add_subdirectory(managed)
 add_subdirectory(cimgui)
 add_subdirectory(native)
+
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT csharpify)
 
 install(TARGETS csharpify_coreclr EXPORT csharpify_coreclr_export
   FILE_SET HEADERS DESTINATION include/csharpify/coreclr

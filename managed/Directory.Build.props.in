@@ -1,0 +1,13 @@
+<Project>
+   <PropertyGroup>
+    <RepoBuildPath>$([MSBuild]::ValueOrDefault('@CMAKE_BINARY_DIR@', '').Replace('/', '\'))\</RepoBuildPath>
+    <RepoBinPath>$(RepoBuildPath)bin\</RepoBinPath>
+    <RepoObjPath>$(RepoBuildPath)obj\</RepoObjPath>
+    <BaseIntermediateOutputPath>$(RepoObjPath)</BaseIntermediateOutputPath>
+    <BaseOutputPath Condition=" '$(BaseOutputPath)' == '' ">$(RepoBinPath)</BaseOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DNNE" Version="2.0.6.2" GeneratePathProperty="true" />
+  </ItemGroup>
+</Project>

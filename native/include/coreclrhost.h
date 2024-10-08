@@ -22,8 +22,8 @@
 // The prototype is useful for implicit linking against the dynamic coreclr
 // library and the pointer for explicit dynamic loading (dlopen, LoadLibrary)
 #define CORECLR_HOSTING_API(function, ...) \
-    extern "C" int CORECLR_CALLING_CONVENTION function(__VA_ARGS__); \
-    typedef int (CORECLR_CALLING_CONVENTION *function##_ptr)(__VA_ARGS__)
+	extern "C" int CORECLR_CALLING_CONVENTION function(__VA_ARGS__); \
+	typedef int (CORECLR_CALLING_CONVENTION *function##_ptr)(__VA_ARGS__)
 
 //
 // Initialize the CoreCLR. Creates and starts CoreCLR host and creates an app domain
@@ -41,13 +41,13 @@
 //  HRESULT indicating status of the operation. S_OK if the assembly was successfully executed
 //
 CORECLR_HOSTING_API(coreclr_initialize,
-                    const char *exePath,
-                    const char *appDomainFriendlyName,
-                    int propertyCount,
-                    const char **propertyKeys,
-                    const char **propertyValues,
-                    void **hostHandle,
-                    unsigned int *domainId);
+					const char *exePath,
+					const char *appDomainFriendlyName,
+					int propertyCount,
+					const char **propertyKeys,
+					const char **propertyValues,
+					void **hostHandle,
+					unsigned int *domainId);
 
 //
 // Shutdown CoreCLR. It unloads the app domain and stops the CoreCLR host.
@@ -60,8 +60,8 @@ CORECLR_HOSTING_API(coreclr_initialize,
 //  HRESULT indicating status of the operation. S_OK if the assembly was successfully executed
 //
 CORECLR_HOSTING_API(coreclr_shutdown,
-                    void *hostHandle,
-                    unsigned int domainId);
+					void *hostHandle,
+					unsigned int domainId);
 
 //
 // Shutdown CoreCLR. It unloads the app domain and stops the CoreCLR host.
@@ -75,9 +75,9 @@ CORECLR_HOSTING_API(coreclr_shutdown,
 //  HRESULT indicating status of the operation. S_OK if the assembly was successfully executed
 //
 CORECLR_HOSTING_API(coreclr_shutdown_2,
-                    void *hostHandle,
-                    unsigned int domainId,
-                    int *latchedExitCode);
+					void *hostHandle,
+					unsigned int domainId,
+					int *latchedExitCode);
 
 //
 // Create a native callable function pointer for a managed method.
@@ -94,12 +94,12 @@ CORECLR_HOSTING_API(coreclr_shutdown_2,
 //  HRESULT indicating status of the operation. S_OK if the assembly was successfully executed
 //
 CORECLR_HOSTING_API(coreclr_create_delegate,
-                    void *hostHandle,
-                    unsigned int domainId,
-                    const char *entryPointAssemblyName,
-                    const char *entryPointTypeName,
-                    const char *entryPointMethodName,
-                    void **delegate);
+					void *hostHandle,
+					unsigned int domainId,
+					const char *entryPointAssemblyName,
+					const char *entryPointTypeName,
+					const char *entryPointMethodName,
+					void **delegate);
 
 //
 // Execute a managed assembly with given arguments
@@ -116,12 +116,25 @@ CORECLR_HOSTING_API(coreclr_create_delegate,
 //  HRESULT indicating status of the operation. S_OK if the assembly was successfully executed
 //
 CORECLR_HOSTING_API(coreclr_execute_assembly,
-                    void *hostHandle,
-                    unsigned int domainId,
-                    int argc,
-                    const char **argv,
-                    const char *managedAssemblyPath,
-                    unsigned int *exitCode);
+					void *hostHandle,
+					unsigned int domainId,
+					int argc,
+					const char **argv,
+					const char *managedAssemblyPath,
+					 unsigned int *exitCode);
+
+
+// Load an assembly and get a function pointer to a method in it.
+CORECLR_HOSTING_API(load_assembly_and_get_function_pointer,
+	const char_t *assembly_path      /* Fully qualified path to assembly */,
+	const char_t *type_name          /* Assembly qualified type name */,
+	const char_t *method_name        /* Public static method name compatible with delegateType */,
+	const char_t *delegate_type_name /* Assembly qualified delegate type name or null
+										or UNMANAGEDCALLERSONLY_METHOD if the method is marked with
+										the UnmanagedCallersOnlyAttribute. */,
+	void         *reserved           /* Extensibility parameter (currently unused and must be 0) */,
+	/*out*/ void **delegate          /* Pointer where to store the function pointer result */
+);
 
 #undef CORECLR_HOSTING_API
 

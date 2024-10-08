@@ -2,7 +2,8 @@ project(csharpify_native)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 17)
 
-set(CSHARPIFY_FILE "${CMAKE_EXECUTABLE_PREFIX}csharpify${CMAKE_EXECUTABLE_SUFFIX}")
+set(CSHARPIFY_NAME "${CMAKE_EXECUTABLE_PREFIX}csharpify")
+set(CSHARPIFY_FILE "${CSHARPIFY_NAME}${CMAKE_EXECUTABLE_SUFFIX}")
 
 cmake_path(APPEND CMAKE_SOURCE_DIR "imgui" OUTPUT_VARIABLE IMGUI_DIR)
 
@@ -25,9 +26,13 @@ if(DOTNET_RUNTIME STREQUAL "coreclr")
 	)
 endif()
 
-list(APPEND coreclr_shared_sources
-	coreclr/coreclr.cpp
-	coreclr/coreclr_win.cpp)
+if(DOTNET_PLATFORM STREQUAL "win")
+	list(APPEND coreclr_shared_sources
+		coreclr/coreclr_win.cpp)
+else()
+	list(APPEND coreclr_shared_sources
+		coreclr/coreclr.cpp)
+endif()
 
 list(APPEND mono_shared_sources
 	mono/mono.cpp
@@ -45,10 +50,6 @@ list(APPEND csharpify_sources
 	${IMGUI_DIR}/backends/imgui_impl_sdl2.cpp
 	${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
 )
-
-if(RUNTIME_CORECLR AND DOTNET_PLATFORM STREQUAL "win")
-	list(APPEND csharpify_sources ${generated_INCLUDE_DIR}/platform.c)
-endif()
 
 configure_file(config.h.in include/config.h)
 
@@ -187,15 +188,10 @@ target_link_libraries(csharpify
 )
 
 if(DOTNET_PLATFORM STREQUAL "win")
-	target_compile_definitions(csharpify PRIVATE "DNNE_ASSEMBLY_NAME=${ASSEMBLYNAME}")
-	target_compile_definitions(csharpify PRIVATE NETHOST_USE_AS_STATIC)
-	set_property(TARGET csharpify PROPERTY
-             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-
+	# On Windows we have to use hostfxr, so we need to link against this thing.
 	target_link_libraries(csharpify
 		${NETHOST}
 	)
-
 endif()
 
 if(USE_MOLTENVK)
@@ -228,29 +224,36 @@ if(NOT BUILD_SDL2)
 	)
 endif()
 
+if(DOTNET_PLATFORM STREQUAL "win")
+	list(APPEND build_outputs
+		"${DOTNET_APPHOST_PATH}/nethost.dll"
+	)
+endif()
+
 # Bundle everything into a runnable directory
-file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(bundle_dir "${CMAKE_BINARY_DIR}/bin")
 
 foreach(thing ${build_outputs})
 	cmake_path(GET thing FILENAME filename)
-	list(APPEND bundle_outputs "${CMAKE_BINARY_DIR}/bin/${filename}")
+	list(APPEND bundle_outputs "${bundle_dir}/${CMAKE_BUILD_TYPE}/${filename}")
 endforeach()
 
-list(APPEND bundle_outputs "${CMAKE_BINARY_DIR}/bin/${CSHARPIFY_FILE}")
+list(APPEND bundle_outputs "${bundle_dir}/${CMAKE_BUILD_TYPE}/${CSHARPIFY_FILE}")
 
 add_custom_command(
 	OUTPUT  ${bundle_outputs}
-	COMMAND ${CMAKE_COMMAND} -E copy -t "${CMAKE_BINARY_DIR}/bin/" "$<TARGET_FILE:csharpify>" ${build_outputs}
-	DEPENDS ${build_outputs}
+	COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_dir}/$<CONFIG>"
+	COMMAND ${CMAKE_COMMAND} -E copy -t "${bundle_dir}/$<CONFIG>" "$<TARGET_FILE:csharpify>" ${build_outputs}
+	DEPENDS ${build_outputs} "$<TARGET_FILE:csharpify>"
 )
 
 if(DOTNET_PLATFORM STREQUAL "win")
-	list(APPEND symbols "$<$<CONFIG:Debug>:${PROJECT_BINARY_DIR}/Debug/${CMAKE_EXECUTABLE_PREFIX}csharpify.pdb>")
-	list(APPEND bundle_symbols "$<$<CONFIG:Debug>:${CMAKE_BINARY_DIR}/bin/${CMAKE_EXECUTABLE_PREFIX}csharpify.pdb>")
+	list(APPEND symbols "$<$<CONFIG:Debug>:${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${CSHARPIFY_NAME}.pdb>")
+	list(APPEND bundle_symbols "$<$<CONFIG:Debug>:${bundle_dir}/${CMAKE_BUILD_TYPE}/${CSHARPIFY_NAME}.pdb>")
 
 	add_custom_command(
 			OUTPUT  ${bundle_symbols}
-			COMMAND ${CMAKE_COMMAND} -E copy -t "${CMAKE_BINARY_DIR}/bin/" ${symbols}
+			COMMAND ${CMAKE_COMMAND} -E copy -t "${bundle_dir}/$<CONFIG>" ${symbols}
 			DEPENDS ${symbols}
 	)
 endif()
@@ -259,8 +262,11 @@ endif()
 add_custom_target(csharpify_native_bundled DEPENDS ${bundle_outputs} ${bundle_symbols})
 
 add_custom_target(run
-	COMMAND "${CMAKE_BINARY_DIR}/bin/${CSHARPIFY_FILE}"
-	DEPENDS "${CMAKE_BINARY_DIR}/bin/${CSHARPIFY_FILE}"
+	COMMAND "${bundle_dir}/$<CONFIG>/${CSHARPIFY_FILE}"
+	DEPENDS "${bundle_dir}/$<CONFIG>/${CSHARPIFY_FILE}"
 )
 
-add_custom_target(program DEPENDS csharpify_managed_bundled csharpify_native_bundled)
+set_property(TARGET csharpify PROPERTY VS_DEBUGGER_COMMAND "${bundle_dir}/$<CONFIG>/${CSHARPIFY_FILE}")
+set_property(TARGET csharpify PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${bundle_dir}/$<CONFIG>")
+
+add_custom_target(program ALL DEPENDS csharpify_managed_bundled csharpify_native_bundled)

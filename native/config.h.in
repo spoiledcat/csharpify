@@ -1,11 +1,14 @@
 #ifndef CSHARPIFY_CONFIG_H__
 #define CSHARPIFY_CONFIG_H__
 
-static constexpr char runtime_identifier[] = "@RID@";
 #define ASSEMBLYNAME "@ASSEMBLYNAME@"
 
 #define RUNTIME_CORECLR @RUNTIME_CORECLR@
 #define RUNTIME_MONO @RUNTIME_MONO@
 #define RUNTIME_NATIVEAOT @RUNTIME_NATIVEAOT@
+
+#include "common.h"
+
+static constexpr char_t runtime_identifier[] = CSH_STR("@RID@");
 
 #endif

@@ -1,6 +1,12 @@
 root = true
 
-[*]
+[*.{c,c++,c++m,cc,ccm,cginc,compute,cp,cpp,cppm,cu,cuh,cxx,cxxm,fx,fxh,h,hh,hlsl,hlsli,hlslinc,hpp,hxx,inc,inl,ino,ipp,ixx,mpp,mq4,mq5,mqh,mxx,tpp,usf,ush}]
 indent_style = tab
-indent_size = 4
+indent_size = tab
+tab_width = 4
 charset = utf-8
+
+[*]
+# ReSharper properties
+resharper_cpp_indent_style = tab
+resharper_cpp_other_braces = end_of_line

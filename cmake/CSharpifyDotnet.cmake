@@ -4,7 +4,8 @@ if ("${DOTNET}" STREQUAL "DOTNET-NOTFOUND")
 else()
 	execute_process(COMMAND "${DOTNET}" --version
 									OUTPUT_VARIABLE DOTNET_VERSION
-									OUTPUT_STRIP_TRAILING_WHITESPACE)
+									OUTPUT_STRIP_TRAILING_WHITESPACE
+									WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
 set(ORIGINAL_PATH $ENV{PATH})
@@ -15,15 +16,22 @@ cmake_path(GET DOTNET PARENT_PATH DOTNET_PATH)
 cmake_path(APPEND DOTNET_PATH "sdk/${DOTNET_VERSION}" OUTPUT_VARIABLE DOTNET_PATH)
 cmake_path(APPEND DOTNET_PATH "Microsoft.NETCoreSdk.BundledVersions.props" OUTPUT_VARIABLE VERSIONS_PROPS)
 file(READ "${VERSIONS_PROPS}" VersionProps_CONTENT)
-string(REGEX MATCH "<BundledNETCoreAppPackageVersion>(.*)</BundledNETCoreAppPackageVersion>" DOTNET_SDK_VERSION "${VersionProps_CONTENT}")
-set(DOTNET_SDK_VERSION "${CMAKE_MATCH_1}")
-message(STATUS "Using ${DOTNET} version ${DOTNET_VERSION} sdk ${DOTNET_SDK_VERSION}")
+string(REGEX MATCH "<BundledNETCoreAppPackageVersion>(.*)</BundledNETCoreAppPackageVersion>" PARSED_DOTNET_SDK_VERSION "${VersionProps_CONTENT}")
+set(PARSED_DOTNET_SDK_VERSION "${CMAKE_MATCH_1}")
+
+#message(STATUS "Using ${DOTNET} version ${DOTNET_VERSION} sdk ${PARSED_DOTNET_SDK_VERSION}")
 
 string(REGEX MATCH "([0-9]+)\.([0-9]+)\\.([0-9]+)" VERSION_PARTS "${DOTNET_VERSION}")
 set(DOTNET_MAJOR "${CMAKE_MATCH_1}")
 set(DOTNET_MINOR "${CMAKE_MATCH_2}")
 set(DOTNET_PATCH "${CMAKE_MATCH_3}")
-message(STATUS ".NET SDK:${DOTNET_SDK_VERSION}")
+set(DOTNET_SDK_VERSION "${PARSED_DOTNET_SDK_VERSION}" CACHE STRING "..NET SDK Version" FORCE)
+set(DOTNET_VERSION_MAJOR "${DOTNET_MAJOR}" CACHE STRING ".NET SDK Version Major" FORCE)
+set(DOTNET_VERSION_MINOR "${DOTNET_MINOR}" CACHE STRING ".NET SDK Version Minor" FORCE)
+set(DOTNET_VERSION_PATCH "${DOTNET_PATCH}" CACHE STRING ".NET SDK Version Patch" FORCE)
+set(DOTNET_SDK_VERSION "${PARSED_DOTNET_SDK_VERSION}" CACHE STRING "..NET SDK Version" FORCE)
+
+message(STATUS ".NET SDK:${PARSED_DOTNET_SDK_VERSION}")
 message(STATUS ".NET Version:${DOTNET_MAJOR}.${DOTNET_MINOR}.${DOTNET_PATCH}")
 
 cmake_path(APPEND CMAKE_SOURCE_DIR ".packages" OUTPUT_VARIABLE DOTNET_PACKAGES_PATH)
@@ -32,17 +40,17 @@ set(RID "${DOTNET_PLATFORM}-${DOTNET_ARCH}" CACHE STRING ".NET Runtime Identifie
 
 # this is useful on all platforms for the coreclr definitions
 set(DOTNET_APPHOST_PATH
-	"${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.host.win-x64/${DOTNET_SDK_VERSION}/runtimes/win-x64/native"
+	"${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.host.win-x64/${PARSED_DOTNET_SDK_VERSION}/runtimes/win-x64/native"
 	CACHE STRING ".NET App Host" FORCE
 )
 
 set(DOTNET_SDK_PATH_ROOT
-	"${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.runtime.${runtimesuffix}${RID}/${DOTNET_SDK_VERSION}/runtimes/${RID}"
+	"${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.runtime.${runtimesuffix}${RID}/${PARSED_DOTNET_SDK_VERSION}/runtimes/${RID}"
 	CACHE STRING ".NET SDK root" FORCE
 )
 
 set(DOTNET_SDK_NUSPEC
-	"${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.runtime.${runtimesuffix}${RID}/${DOTNET_SDK_VERSION}/microsoft.netcore.app.runtime.${runtimesuffix}${RID}.nuspec"
+	"${DOTNET_PACKAGES_PATH}/microsoft.netcore.app.runtime.${runtimesuffix}${RID}/${PARSED_DOTNET_SDK_VERSION}/microsoft.netcore.app.runtime.${runtimesuffix}${RID}.nuspec"
 	CACHE STRING ".NET SDK nuspec marker" FORCE
 )
 
@@ -59,8 +67,12 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
 
-if(RUNTIME_CORECLR AND (NOT DOTNET_PLATFORM STREQUAL "win"))
-	find_library(CORECLR coreclr PATHS "${DOTNET_LIBRARY_PATH}")
+if(RUNTIME_CORECLR)
+	if(DOTNET_PLATFORM STREQUAL "win")
+		list(APPEND DOTNET_INCLUDE_DIRS "${DOTNET_APPHOST_PATH}")
+	else()
+		find_library(CORECLR coreclr PATHS "${DOTNET_LIBRARY_PATH}")
+	endif()
 elseif(RUNTIME_MONO)
 	find_library(CORECLR coreclr PATHS "${DOTNET_LIBRARY_PATH}")
 endif()

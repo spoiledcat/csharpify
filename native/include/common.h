@@ -66,6 +66,16 @@
 #endif
 
 #if PLATFORM_WIN
+#   ifdef _WCHAR_T_DEFINED
+        typedef wchar_t char_t;
+#   else
+        typedef unsigned short char_t;
+#   endif
+#else
+    typedef char char_t;
+#endif
+
+#if PLATFORM_WIN
 #   define CSH_EXPORT_API __declspec(dllexport)
 #   define CSH_CALLTYPE __stdcall
 #   define CSH_STR_(s1) L ## s1
@@ -76,8 +86,11 @@
 #   define CSH_STR(s) s
 #endif
 
-#define CSHARPIFY_BEGIN_C  extern "C" {
-#define CSHARPIFY_END_C    }
+#define CSH_BEGIN_C  extern "C" {
+#define CSH_END_C    }
+#define CSH_EXTERN_C extern "C"
 
+#define CSH_TOSTRING2(s) #s
+#define CSH_TOSTRING(s) CSH_TOSTRING2(s)
 
 #endif //CSHARPIFY_COMMON_H
