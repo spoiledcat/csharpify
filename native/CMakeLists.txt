@@ -19,6 +19,11 @@ string(PREPEND IMGUI_GEN "#include \"imgui_bridge.h\"\n")
 string(REPLACE "int main(int" "int imgui_main(int" IMGUI_GEN "${IMGUI_GEN}")
 file(WRITE ${PROJECT_BINARY_DIR}/imgui.gen.cpp "${IMGUI_GEN}")
 
+file(READ ${CIMGUI_DIR}/cimgui.cpp CIMGUI_GEN)
+string(LENGTH "${CIMGUI_GEN}" CIMGUI_GEN_LEN)
+string(REPLACE "#include \"./imgui/" "#include \"" CIMGUI_GEN "${CIMGUI_GEN}")
+file(WRITE ${PROJECT_BINARY_DIR}/cimgui.gen.cpp "${CIMGUI_GEN}")
+
 set(DOTNET_LIBS "")
 
 if(DOTNET_RUNTIME STREQUAL "coreclr")
@@ -50,7 +55,7 @@ list(APPEND csharpify_sources
 	${IMGUI_DIR}/imgui_widgets.cpp
 	${IMGUI_DIR}/backends/imgui_impl_sdl2.cpp
 	${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
-	${CIMGUI_DIR}/cimgui.cpp
+	${PROJECT_BINARY_DIR}/cimgui.gen.cpp
 )
 
 configure_file(config.h.in include/config.h)
