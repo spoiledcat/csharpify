@@ -190,13 +190,6 @@ target_link_libraries(csharpify
 	${Vulkan_LIBRARY}
 )
 
-if(DOTNET_PLATFORM STREQUAL "win")
-	# On Windows we have to use hostfxr, so we need to link against this thing.
-	target_link_libraries(csharpify
-		${NETHOST}
-	)
-endif()
-
 if(USE_MOLTENVK)
 	target_link_libraries(csharpify
 		${Vulkan_MoltenVK_LIBRARY}
@@ -224,12 +217,6 @@ if(NOT BUILD_SDL2)
 
 	list(APPEND build_outputs
 		"${SDL2_DLL}"
-	)
-endif()
-
-if(DOTNET_PLATFORM STREQUAL "win")
-	list(APPEND build_outputs
-		"${DOTNET_APPHOST_PATH}/nethost.dll"
 	)
 endif()
 

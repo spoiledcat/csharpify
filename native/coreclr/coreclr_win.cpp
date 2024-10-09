@@ -18,7 +18,6 @@
 #include <cassert>
 #include <dnne.h>
 #include <cstdio>
-#include <nethost.h>
 #include <hostfxr.h>
 
 #define CSH_LOCK_OPEN (0)
@@ -45,7 +44,7 @@ namespace {
 	load_assembly_and_get_function_pointer_ptr load_assembly_and_get_function_pointer_fptr;
 	coreclr_create_delegate_ptr coreclr_create_delegate_fptr;
 
-	std::wstring assembly_path;
+	std::wstring assemblyPath;
 }
 
 CSH_EXTERN_C CSH_EXPORT_API void CSH_CALLTYPE set_failure_callback(failure_fn cb)
@@ -193,23 +192,12 @@ void *pinvoke_override(const char *libraryName, const char *entrypointName)
 	return symbol;
 }
 
-int load_hostfxr(const char_t *assemblyPath)
+int load_hostfxr()
 {
-	// Discover the path to hostfxr.
-	char_t buffer[CSH_MAX_PATH];
-	size_t buffer_size = std::size(buffer);
-
-	struct get_hostfxr_parameters params;
-	params.size = sizeof(params);
-	params.assembly_path = assemblyPath;
-	params.dotnet_root = nullptr;
-	const int rc = get_hostfxr_path(buffer, &buffer_size, &params);
-	if (is_failure(rc)) {
-		return rc;
-	}
+	const auto path = fs::path(assemblyPath).parent_path().append("shared/host/fxr/hostfxr.dll");
 
 	// Load hostfxr and get desired exports.
-	void *lib = load_library(buffer);
+	void *lib = load_library(path);
 
 	init_self_contained_fptr = (hostfxr_initialize_for_dotnet_command_line_fn)load_symbol(lib, "hostfxr_initialize_for_dotnet_command_line");
 	init_fptr = (hostfxr_initialize_for_runtime_config_fn)load_symbol(lib, "hostfxr_initialize_for_runtime_config");
@@ -221,13 +209,13 @@ int load_hostfxr(const char_t *assemblyPath)
 	return 0;
 }
 
-int init_dotnet(const char_t *assemblyPath)
+int init_dotnet()
 {
 	// Self-contained scenario support relies upon the application scenario
 	// entry-point. The logic here is to trick the hosting API into initializing as an application
 	// but call the "load assembly and get delegate" instead of "run main". This has impact
 	// on the TPA make-up and hence assembly loading in general since the TPA populates the default ALC.
-	const char_t *configPath = assemblyPath;
+	const char_t *configPath = assemblyPath.c_str();
 
 	// Load .NET runtime
 	hostfxr_handle ctx = nullptr;
@@ -261,14 +249,14 @@ int load_managed_runtime()
 	if (!initialized) {
 		const auto assemblyName = ASSEMBLYNAME ".dll";
 		fs::path startAssembly = fs::path(".") / assemblyName;
-		assembly_path = normalizePathW(startAssembly);
+		assemblyPath = normalizePathW(startAssembly);
 
 		// Load HostFxr and get exported hosting functions.
-		int rc = load_hostfxr(assembly_path.c_str());
+		int rc = load_hostfxr();
 		IF_FAILURE_RETURN_OR_ABORT(failure_load_runtime, rc, &prepare_lock);
 
 		// Initialize and start the runtime.
-		rc = init_dotnet(assembly_path.c_str());
+		rc = init_dotnet();
 		IF_FAILURE_RETURN_OR_ABORT(failure_load_runtime, rc, &prepare_lock);
 
 		assert(load_assembly_and_get_function_pointer_fptr != nullptr);
@@ -293,7 +281,7 @@ void *get_callable_managed_function(const char_t *dotnetType, const char_t *dotn
 	// we exit this function. This being done because this
 	// API is an implementation detail of the export but
 	// can result in side-effects during export resolution.
-	const int curr_error = get_current_error();
+	const int currError = get_current_error();
 	int rc;
 	// Check if the runtime has already been prepared.
 	if (!initialized) {
@@ -306,7 +294,7 @@ void *get_callable_managed_function(const char_t *dotnetType, const char_t *dotn
 	// Function pointer to managed function
 	void *func = nullptr;
 	rc = load_assembly_and_get_function_pointer_fptr(
-		assembly_path.c_str(),
+		assemblyPath.c_str(),
 		dotnetType,
 		dotnetTypeMethod,
 		dotnetDelegateType,
@@ -318,7 +306,7 @@ void *get_callable_managed_function(const char_t *dotnetType, const char_t *dotn
 
 	// Now that the export has been resolved, reset
 	// the error state to hide this implementation detail.
-	set_current_error(curr_error);
+	set_current_error(currError);
 	return func;
 }
 

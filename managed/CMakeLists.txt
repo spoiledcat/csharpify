@@ -31,52 +31,56 @@ add_custom_command(
 
 add_custom_target(build DEPENDS ${build_outputs} "${generated_INCLUDE_DIR}/exports.g.c")
 
+list(APPEND binaries "${bin_dir}/${ASSEMBLYNAME}.dll")
+
 add_custom_command(
   OUTPUT "${dotnet_publish_dir}/${ASSEMBLYNAME}.dll"
   COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} publish \"${CSPROJ}\" ${publish_args} --nologo -c $<CONFIG> -o \"${dotnet_publish_dir}\"  /p:UseMonoRuntime=$<IF:$<BOOL:${RUNTIME_MONO}>,true,false>
   DEPENDS "Directory.Build.props" "Directory.Build.targets" "main.cs" "managed.csproj"
 )
 
+list(APPEND binaries "${dotnet_publish_dir}/${ASSEMBLYNAME}.dll")
+
 # Bundle everything into a runnable directory
 file(MAKE_DIRECTORY "${bin_dir}")
 
-add_custom_command(
-  OUTPUT "${bin_dir}/${ASSEMBLYNAME}.dll"
-  COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} publish \"${CSPROJ}\" ${publish_args} --nologo -c $<CONFIG> -o \"${bin_dir}\"  /p:UseMonoRuntime=$<IF:$<BOOL:${RUNTIME_MONO}>,true,false>
-  DEPENDS "Directory.Build.props" "Directory.Build.targets" "main.cs" "managed.csproj"
-)
+if(NOT DOTNET_PLATFORM STREQUAL "win" OR NOT DOTNET_RUNTIME STREQUAL "coreclr")
+  add_custom_command(
+    OUTPUT "${bin_dir}/${ASSEMBLYNAME}.dll"
+    COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} publish \"${CSPROJ}\" ${publish_args} --nologo -c $<CONFIG> -o \"${bin_dir}\"  /p:UseMonoRuntime=$<IF:$<BOOL:${RUNTIME_MONO}>,true,false>
+    DEPENDS "Directory.Build.props" "Directory.Build.targets" "main.cs" "managed.csproj"
+  )
 
-add_custom_target(managed_publish DEPENDS "${dotnet_publish_dir}/${ASSEMBLYNAME}.dll" "${bin_dir}/${ASSEMBLYNAME}.dll")
+  add_custom_target(managed_publish DEPENDS "${dotnet_publish_dir}/${ASSEMBLYNAME}.dll" "${bin_dir}/${ASSEMBLYNAME}.dll")
 
-add_custom_command(
-  OUTPUT "${dotnet_sc_dir}/${ASSEMBLYNAME}.dll" "${dotnet_sc_dir}/System.dll"
-  COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} publish \"${CSPROJ}\" ${publish_args} --sc -r ${RID} --nologo -c $<CONFIG> -o \"${dotnet_sc_dir}\"  /p:UseMonoRuntime=$<IF:$<BOOL:${RUNTIME_MONO}>,true,false>
-  DEPENDS "Directory.Build.props" "Directory.Build.targets" "main.cs" "managed.csproj"
-)
+  add_custom_command(
+    OUTPUT "${dotnet_sc_dir}/${ASSEMBLYNAME}.dll" "${dotnet_sc_dir}/System.dll"
+    COMMAND ${CMAKE_COMMAND} -E env "PATH=${ORIGINAL_PATH}" ${DOTNET} publish \"${CSPROJ}\" ${publish_args} --sc -r ${RID} --nologo -c $<CONFIG> -o \"${dotnet_sc_dir}\"  /p:UseMonoRuntime=$<IF:$<BOOL:${RUNTIME_MONO}>,true,false>
+    DEPENDS "Directory.Build.props" "Directory.Build.targets" "main.cs" "managed.csproj"
+  )
 
-add_custom_target(managed_sc DEPENDS "${dotnet_sc_dir}/${ASSEMBLYNAME}.dll")
+  add_custom_target(managed_sc DEPENDS "${dotnet_sc_dir}/${ASSEMBLYNAME}.dll")
+  list(APPEND binaries "${dotnet_sc_dir}/${ASSEMBLYNAME}.dll")
+
+endif()
 
 if(NOT(DOTNET_PLATFORM STREQUAL "win" AND DOTNET_RUNTIME STREQUAL "coreclr"))
   add_custom_target(copy_sdk
     COMMAND ${CMAKE_COMMAND} -E create_symlink "${dotnet_sc_dir}" "${bin_dir}/sdk"
     DEPENDS "${dotnet_sc_dir}/System.dll"
   )
-list(APPEND sdk copy_sdk)
+
+  list(APPEND sdk copy_sdk)
 endif()
 
-add_custom_target(csharpify_managed DEPENDS "${dotnet_publish_dir}/${ASSEMBLYNAME}.dll" "${dotnet_sc_dir}/${ASSEMBLYNAME}.dll" "${bin_dir}/${ASSEMBLYNAME}.dll")
+add_custom_target(csharpify_managed DEPENDS ${binaries})
 
-# On Windows, we need to copy nethost.dll next to the executable
-# and have a shared/Microsoft.NETCore.App/${DOTNET_SDK_VERSION} folder
+# On Windows, we need to have a shared/Microsoft.NETCore.App/${DOTNET_SDK_VERSION} folder
 # with the sdk, which comes from ${DOTNET_SDK_PATH}
 # coreclr.dll et al from ${DOTNET_LIBRARY_PATH} go into the shared folder
 # and hostfxr.dll goes into its own folder (it must be three levels down
 # because it's hardcoded to search for the sdk three levels up, it's stupid)
 if(DOTNET_PLATFORM STREQUAL "win" AND DOTNET_RUNTIME STREQUAL "coreclr")
-  list(APPEND build_outputs
-    "${DOTNET_APPHOST_PATH}/nethost.dll"
-  )
-
   foreach(thing ${build_outputs})
     cmake_path(GET thing FILENAME filename)
     list(APPEND bundle_outputs "${bundle_dir}/${CMAKE_BUILD_TYPE}/${filename}")
@@ -95,6 +99,7 @@ if(DOTNET_PLATFORM STREQUAL "win" AND DOTNET_RUNTIME STREQUAL "coreclr")
     OUTPUT  ${bundle_outputs} 
     COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_dir}/$<CONFIG>"
     COMMAND ${CMAKE_COMMAND} -E copy -t "${bundle_dir}/$<CONFIG>" ${build_outputs} "${bin_dir}/${ASSEMBLYNAME}.dll"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${dotnet_publish_dir} "${bundle_dir}/$<CONFIG>"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_dir}/$<CONFIG>/shared/Microsoft.NETCore.App"
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DOTNET_SDK_PATH}" "${bundle_dir}/$<CONFIG>/shared/Microsoft.NETCore.App/${DOTNET_SDK_VERSION}"
     COMMAND ${CMAKE_COMMAND} -E copy -t "${bundle_dir}/$<CONFIG>/shared/Microsoft.NETCore.App/${DOTNET_SDK_VERSION}" "${DOTNET_LIBRARY_PATH}/hostpolicy.dll"

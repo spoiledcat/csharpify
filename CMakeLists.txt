@@ -33,12 +33,6 @@ elseif(DOTNET_PLATFORM STREQUAL "win")
   # There is also the possibility of downloading pre-packaged source release instead of 
   # grabbing the git tag.
   set(BUILD_SDL2 1)
-
-  # On Windows we can't avoid using hostfxr (blergh) so we have 
-  # there are two libs, nethost.lib (dynamic) and libnethost.lib (static), and we want the dynamic one
-  # the static one forces a static release runtime on all subsequent links and that's annoying
-  set(NETHOST "${DOTNET_APPHOST_PATH}/nethost.lib")
-
 elseif(DOTNET_PLATFORM STREQUAL "linux")
   # We could consume an existing package, but we can also just build our own
   # and not require extra steps to make this work.
