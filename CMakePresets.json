@@ -1,66 +1,100 @@
 {
   "version": 6,
-  "cmakeMinimumRequired": {
+  "cmakeMinimumRequired":
+  {
     "major": 3,
     "minor": 26,
     "patch": 0
   },
-  "configurePresets": [
+  "configurePresets":
+  [
     {
       "name": "coreclr",
       "displayName": "CoreCLR",
       "description": "Build with CoreCLR",
       "binaryDir": "${sourceDir}/build/coreclr",
-      "cacheVariables": {
-        "DOTNET_RUNTIME": {
+      "cacheVariables":
+      {
+        "DOTNET_RUNTIME":
+        {
           "type": "STRING",
           "value": "coreclr"
         }
       }
-	 },
+    },
     {
       "name": "mono",
       "displayName": "Mono",
       "description": "Build with Mono",
       "binaryDir": "${sourceDir}/build/mono",
-      "cacheVariables": {
-        "DOTNET_RUNTIME": {
+      "cacheVariables":
+      {
+        "DOTNET_RUNTIME":
+        {
           "type": "STRING",
           "value": "mono"
         }
       }
-	 },
+    },
     {
       "name": "nativeaot",
       "displayName": "NativeAOT",
       "description": "Build with NativeAOT",
       "binaryDir": "${sourceDir}/build/nativeaot",
-      "cacheVariables": {
-        "DOTNET_RUNTIME": {
+      "cacheVariables":
+      {
+        "DOTNET_RUNTIME":
+        {
           "type": "STRING",
           "value": "nativeaot"
         }
       }
-	 }
-	],
-  "buildPresets": [
+    }
+  ],
+  "buildPresets":
+  [
     {
       "name": "coreclr",
       "displayName": "CoreCLR",
       "description": "Build with CoreCLR",
       "configurePreset": "coreclr"
-	 },
+    },
     {
       "name": "mono",
       "displayName": "Mono",
       "description": "Build with Mono",
       "configurePreset": "mono"
-	 },
+    },
     {
       "name": "nativeaot",
       "displayName": "NativeAOT",
       "description": "Build with NativeAOT",
       "configurePreset": "nativeaot"
-	 }
-	]
+    }
+  ],
+  "packagePresets":
+  [
+    {
+      "name": "coreclr",
+      "displayName": "Package",
+      "description": "Package from the build/coreclr directory (all modes will be packaged, just pick the same preset that you used to configure)",
+      "configurePreset": "coreclr",
+      "generators": ["ZIP"]
+    },
+    {
+      "name": "mono",
+      "displayName": "Package",
+      "description": "Package from the build/mono directory (all modes will be packaged, just pick the same preset that you used to configure)",
+      "configurePreset": "mono",
+      "generators": ["ZIP"]
+    },
+    {
+      "name": "nativeaot",
+      "displayName": "Package",
+      "description": "Package from the build/nativeaot directory (all modes will be packaged, just pick the same preset that you used to configure)",
+      "configurePreset": "nativeaot",
+      "generators": ["ZIP"]
+    }
+  ]
+
 }

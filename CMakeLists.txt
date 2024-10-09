@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.26)
-project(csharpify)
-set(version 1.0.0)
+project(csharpify
+  VERSION 1.1
+  DESCRIPTION "Package and example of how to embed C# in C++ applications."
+)
 
 if(POLICY CMP0091)
   cmake_policy(SET CMP0091 NEW) 
@@ -27,11 +29,20 @@ if(DOTNET_PLATFORM STREQUAL "osx")
   find_library(COCOA Cocoa)
   find_library(COREVIDEO CoreVideo)
 elseif(DOTNET_PLATFORM STREQUAL "win")
+
+  # There is also the possibility of downloading pre-packaged source release instead of 
+  # grabbing the git tag.
   set(BUILD_SDL2 1)
+
+  # On Windows we can't avoid using hostfxr (blergh) so we have 
   # there are two libs, nethost.lib (dynamic) and libnethost.lib (static), and we want the dynamic one
   # the static one forces a static release runtime on all subsequent links and that's annoying
   set(NETHOST "${DOTNET_APPHOST_PATH}/nethost.lib")
+
 elseif(DOTNET_PLATFORM STREQUAL "linux")
+  # We could consume an existing package, but we can also just build our own
+  # and not require extra steps to make this work.
+  set(BUILD_SDL2 1)
 endif()
 
 if(BUILD_SDL2)
@@ -47,8 +58,6 @@ if(BUILD_SDL2)
     GIT_TAG        SDL2
   )
   FetchContent_MakeAvailable(sdl2)
-
-  #set(SDL2_INCLUDE_DIRS "${SDL2_BINARY_DIR}/include" "${SDL2_BINARY_DIR}/include/SDL2")
 
 elseif(DOTNET_PLATFORM STREQUAL "win")
   include(FetchContent)
@@ -120,18 +129,31 @@ install(EXPORT csharpify_mono_export
   DESTINATION lib/cmake/csharpify
 )
 
-install(FILES cmake/CSharpifyDefinitions.cmake DESTINATION lib/cmake/csharpify)
-install(FILES cmake/CSharpifyDotnet.cmake DESTINATION lib/cmake/csharpify)
+install(FILES 
+  cmake/CSharpifyDefinitions.cmake
+  cmake/CSharpifyDotnet.cmake 
+  native/config.h.in
+  DESTINATION lib/cmake/csharpify
+)
+
+install(FILES 
+  LICENSE
+  AUTHORS
+  DESTINATION "./"
+)
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/dotnet-deps/ DESTINATION lib/cmake/csharpify/dotnet-deps
-        FILES_MATCHING PATTERN "*.csproj" PATTERN "CMakeLists.txt"
+        FILES_MATCHING
+        PATTERN "*.csproj"
+        PATTERN "CMakeLists.txt"
+        PATTERN "*.props"
+        PATTERN "obj/*" EXCLUDE
 )
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/dotnet-deps/imports/ DESTINATION lib/cmake/csharpify/dotnet-deps/imports/
-        FILES_MATCHING PATTERN "*.props"
+        FILES_MATCHING
+        PATTERN "*.props"
 )
-
-install(FILES native/config.h.in DESTINATION lib/cmake/csharpify)
 
 include(CMakePackageConfigHelpers)
 
@@ -152,3 +174,5 @@ install(FILES
   DESTINATION lib/cmake/csharpify
 )
 
+set(CPACK_SYSTEM_NAME "all")
+include(CPack)
