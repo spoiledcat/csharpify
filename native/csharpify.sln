@@ -9,7 +9,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "csharpify_native_bundled", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "managed", "..\managed\managed.csproj", "{80C2E0D9-B011-4C9F-A914-D9F45D2F103E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "managed_publish", "..\build\coreclr\managed\managed_publish.vcxproj", "{22EF3589-480D-3641-9259-7633F03E4E4B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "csharpify_managed_bundled", "..\build\coreclr\managed\csharpify_managed_bundled.vcxproj", "{22EF3589-480D-3641-9259-7633F03E4E4B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

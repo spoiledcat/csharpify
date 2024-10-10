@@ -13,6 +13,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="CMakeLists.txt" />
+    <None Remove="Directory.Build.props" />
+    <None Remove="Directory.Build.props.in" />
+    <None Remove="Directory.Build.targets" />
+  </ItemGroup>
+
+  <ItemGroup>
     <DirectPInvoke Include="__Internal" />
     <DirectPInvoke Include="$(TargetName)" />
     <DirectPInvoke Include="cimgui" />
