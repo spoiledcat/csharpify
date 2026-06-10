@@ -115,7 +115,7 @@ int load_managed_runtime() {
     return rv;
 }
 
-CSHARPIFY_BEGIN_C
+CSH_BEGIN_C
 void* get_fast_callable_managed_function(
         const char_t* dotnet_type,
         const char_t* dotnet_type_method) {
@@ -135,7 +135,7 @@ void* get_fast_callable_managed_function(
     return del;
 }
 
-CSHARPIFY_END_C
+CSH_END_C
 
 int register_icall(const char* name, const void* fnptr) {
     return 0;

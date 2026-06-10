@@ -78,7 +78,11 @@
 #if PLATFORM_WIN
 #   define CSH_EXPORT_API __declspec(dllexport)
 #   define CSH_CALLTYPE __stdcall
-#   define CSH_STR_(s1) L ## s1
+#if RUNTIME_CORECLR
+#	define CSH_STR_(s1) L##s1
+#else
+#	define CSH_STR_(s1) u8##s1
+#endif
 #   define CSH_STR(s) CSH_STR_(s)
 #else
 #   define CSH_EXPORT_API __attribute__((visibility("default")))

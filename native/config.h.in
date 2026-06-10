@@ -9,6 +9,6 @@
 
 #include "common.h"
 
-static constexpr char_t runtime_identifier[] = CSH_STR("@RID@");
+static constexpr const char* runtime_identifier = CSH_STR("@RID@");
 
 #endif
